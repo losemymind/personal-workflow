@@ -11,13 +11,17 @@
 
 ```
 skill-creator/
-  README.md
-  templates/       # 通用模板（SKILL.md 骨架等）
-  <skill-name>/    # 单个 Skill 的制作目录
+  README.md              # 说明
+  SKILL.md               # 核心：创建/改进/验证/安装技能的方法论
+  templates/
+    SKILL.template.md    # 新技能骨架模板
+  <skill-name>/          # 创建的单个技能实例（安装到客户端时只复制该子目录）
     SKILL.md
 ```
 
 ## 使用
 
-1. 参考 `templates/` 中的 SKILL.md 骨架创建你的 Skill
-2. 将目录放入 `~/.config/opencode/skills/`（或工作区 `.opencode/skills/`）
+1. 参考本目录 `SKILL.md` 的技能创建方法论
+2. 使用 `templates/SKILL.template.md` 作为骨架创建你的 Skill
+3. 把`<skill-name>/` 目录复制到目标客户端的 skills 目录（Claude: `~/.claude/skills/`、OpenCode: `~/.config/opencode/skills/` 或 `.opencode/skills/`、Codex: `~/.codex/skills/`），重启客户端生效
+4. 经验证的技能提交到仓库 `skills/<skill-name>/`
