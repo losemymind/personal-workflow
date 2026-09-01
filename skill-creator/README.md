@@ -23,5 +23,6 @@ skill-creator/
 
 1. 参考本目录 `SKILL.md` 的技能创建方法论
 2. 使用 `templates/SKILL.template.md` 作为骨架创建你的 Skill
-3. 把`<skill-name>/` 目录复制到目标客户端的 skills 目录（Claude: `~/.claude/skills/`、OpenCode: `~/.config/opencode/skills/` 或 `.opencode/skills/`、Codex: `~/.codex/skills/`），重启客户端生效
-4. 经验证的技能提交到仓库 `skills/<skill-name>/`
+3. 运行自动验证：`python tools/scripts/validate_skills.py`（或 `--strict` 严格模式）
+4. 把`<skill-name>/` 目录复制到目标客户端的 skills 目录（Claude: `~/.claude/skills/`、OpenCode: `~/.config/opencode/skills/` 或 `.opencode/skills/`、Codex: `~/.codex/skills/`），重启客户端生效
+5. 经验证的技能提交到仓库 `skills/<skill-name>/`

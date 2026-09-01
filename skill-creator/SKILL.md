@@ -74,6 +74,20 @@ tools: [claude, opencode, codex, deepseek]
 3. 用两种描述（现版 vs 改进版）各自跑查询，对比触发率，选择测试集分数更高的版本。
 4. 向用户展示前后对比与得分。
 
+### 阶段 5.5：运行自动验证
+
+编写完成后、安装归档前，运行仓库自带的验证脚本（基于 agentic-awesome-skills 的验证器实现）：
+
+```bash
+python tools/scripts/validate_skills.py                # 标准模式（警告不阻断）
+python tools/scripts/validate_skills.py --strict       # 严格模式（有警告即失败，适合 CI）
+python tools/scripts/validate_skills.py --dir <skills目录>  # 校验指定目录
+```
+
+脚本检查：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
+
+验证通过后再进行安装与归档。
+
 ### 阶段 6：安装与归档
 
 - 按「多客户端安装指引」把技能复制到目标客户端的 skills 目录。
@@ -219,4 +233,5 @@ A: 简短的单次交互用命令；可复用的多步骤流程先做技能；�
 - 本技能产出的是**通用目录格式**的技能，各客户端可能对 frontmatter 的扩展字段支持程度不同；以目标客户端文档为准。
 - 触发准确性无法 100% 保证，`description` 需要持续迭代。
 - 本技能不自动执行测试运行环境（如无 Python 的环境）、不代替用户最终审核；安装到生产客户端前应先在测试项目验证。
-- Windows 环境下安装路径与类 Unix 环境不同（如 `~/.config` 对应 `%USERPROFILE%\.config`），跨平台使用请以实际路径为准。
+- 自动验证脚本依赖 Python 3 + PyYAML；缺少 `python` 命令的环境可用 `opencode`/`ruff` 等替代检查，或手动逐项对照质量检查清单。
+- Windows 环境下安装路径与类 Unix 环境不同（如 `~/.config` 对应 `%USERPROFILE%\\.config`），跨平台使用请以实际路径为准。
