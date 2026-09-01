@@ -55,6 +55,16 @@ WHEN_TO_USE_PATTERNS = [
     re.compile(r"^##\s+何时使用(?:此|这|本)*技能", re.MULTILINE),
 ]
 
+# English + Chinese "examples" and "limitations" section headers (both accepted)
+EXAMPLES_PATTERNS = [
+    re.compile(r"^##\s+Examples?", re.MULTILINE | re.IGNORECASE),
+    re.compile(r"^##\s+示例", re.MULTILINE),
+]
+LIMITATIONS_PATTERNS = [
+    re.compile(r"^##\s+Limitations?", re.MULTILINE | re.IGNORECASE),
+    re.compile(r"^##\s+限制", re.MULTILINE),
+]
+
 SOURCE_REPO_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 VALID_SOURCE_TYPES = {"official", "community", "self"}
 VALID_RISK_LEVELS = ["none", "safe", "critical", "offensive", "unknown"]
@@ -210,6 +220,14 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
         # 3. Content checks (triggers)
         if not has_when_to_use_section(content):
             msg = f"⚠️  {rel_path}: Missing '## When to Use' or '## 何时使用此技能' section"
+            (errors if strict_mode else warnings).append(msg.replace("⚠️", "❌") if strict_mode else msg)
+
+        # 4. Content quality (examples + limitations per quality bar)
+        if not any(p.search(content) for p in EXAMPLES_PATTERNS):
+            msg = f"⚠️  {rel_path}: Missing '## Examples' or '## 示例' section (quality bar requires at least one copy-pasteable example)"
+            (errors if strict_mode else warnings).append(msg.replace("⚠️", "❌") if strict_mode else msg)
+        if not any(p.search(content) for p in LIMITATIONS_PATTERNS):
+            msg = f"⚠️  {rel_path}: Missing '## Limitations' or '## 限制和注意事项' section (quality bar requires known limits)"
             (errors if strict_mode else warnings).append(msg.replace("⚠️", "❌") if strict_mode else msg)
 
         # 4. Security guardrails

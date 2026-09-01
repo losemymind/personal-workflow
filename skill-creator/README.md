@@ -1,6 +1,6 @@
 # skill-creator
 
-创建和管理自定义 Skill 的目录。
+创建和管理自定义 Skill 的目录。融合 5 个成熟 skill-creator 的实现精华（agentic-awesome-skills / Anthropic 官方 / MCPMarket / codex-skill-creator / agent-skill-creator）：证据驱动、渐进式披露、自由度匹配脆弱性、高信号命名、迭代测试循环、触发优化与治理化验证。
 
 ## 约定
 
@@ -21,7 +21,7 @@ skill-creator/
 
 ## 使用
 
-1. 参考本目录 `SKILL.md` 的技能创建方法论
+1. 参考本目录 `SKILL.md` 的技能创建方法论（9 阶段核心工作流）
 2. 使用 `templates/SKILL.template.md` 作为骨架创建你的 Skill
 3. 运行自动验证：`python tools/scripts/validate_skills.py`（或 `--strict` 严格模式）
 4. 把`<skill-name>/` 目录复制到目标客户端的 skills 目录（Claude: `~/.claude/skills/`、OpenCode: `~/.config/opencode/skills/` 或 `.opencode/skills/`、Codex: `~/.codex/skills/`），重启客户端生效
