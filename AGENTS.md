@@ -14,9 +14,20 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 | 代理库 | `agents/` | 已验证可安装的代理 |
 | 基础工具 | `tools/scripts/` | 四端安装器与生命周期管理（install/update/uninstall/rollback） |
 
+## 入口选择（先定领域）
+
+| 任务类型 | 进入入口 | 说明 |
+|---|---|---|
+| 创建/改进/**技能** | `skill-creator/AGENTS.md` | 技能领域入口（检索→创建→验证→安装） |
+| 创建/改进/**代理** | `agent-creator/AGENTS.md` | 代理领域入口（身份先于指令→创建→验证→安装） |
+| 安装/生命周期（通用） | `tools/docs/lifecycle.md` | 安装/升级/卸载/回滚命令 |
+| 其他/不确定 | 继续读本文件 | 总编排兜底 |
+
+**技能 vs 代理取舍**：可描述的步骤化流程 → 技能；需要常驻角色/权限/协作 → 代理。
+
 ## 标准工作流
 
-当用户需要"一个做 X 的技能/代理"时，按以下路径执行（**引导型：不自动执行安装**，每步向用户确认后再做）：
+当用户需要"一个做 X 的技能/代理"时，先按上方「入口选择」定位领域，再按该入口的领域工作流执行（**引导型：不自动执行安装**，每步向用户确认后再做）。总览如下：
 
 ### 1. 检索上游（先查后建）
 
@@ -48,12 +59,9 @@ python agent-creator/scripts/create_agent.py
 python agent-creator/scripts/validate_agents.py --strict --dir agents/<name>
 ```
 
-- 技能 vs 代理取舍：可描述的步骤化流程 → 技能；需要常驻角色/权限/协作 → 代理。
-- 代理创建方法论见 `agent-creator/SKILL.md`（身份先于指令、最小权限、协作协议）。
-
 ### 4. 验证测试
 
-按 `skill-creator/SKILL.md` 的阶段 5-7 执行：自动验证 → 真实任务测试 → 触发优化。
+按 `skill-creator/SKILL.md` 的阶段 5-7 执行：自动验证 → 真实任务测试 → 触发优化（代理按 `agent-creator/SKILL.md` 阶段 5-6）。
 
 ### 5. 安装到客户端
 
@@ -70,7 +78,7 @@ python tools/scripts/install_agent.py --client <claude|opencode|codex|deepseek> 
 
 ### 6. 回馈仓库
 
-技能稳定使用后：更新元数据（source/date_added/version/tags）→ 放入 `skills/<name>/` → 提交（含 `evolutions/` 对比记录）。
+稳定使用后：更新元数据（source/date_added/version/tags）→ 放入 `skills/<name>/`（或 `agents/<name>/`）→ 提交（含 `evolutions/` 对比记录）。
 
 ## 生命周期操作（维护）
 

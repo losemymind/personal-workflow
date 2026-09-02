@@ -23,7 +23,8 @@ import yaml
 from _project_paths import find_repo_root
 
 REPO_ROOT = find_repo_root(__file__)
-EXEMPT_DIRS = {"examples"}
+# Doc/resource dirs that must never be scanned as agent definitions
+EXEMPT_DIRS = {"examples", "references", "templates"}
 
 VALID_NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
@@ -147,7 +148,14 @@ def collect_validation_results(agents_dir: str, strict_mode: bool = False) -> di
                 for f in files
                 if f.endswith(".md")
                 and f.lower()
-                not in ("readme.md", "readme", "changelog.md", "development-plan.md")
+                not in (
+                    "readme.md",
+                    "readme",
+                    "changelog.md",
+                    "development-plan.md",
+                    "agents.md",
+                    "skill.md",
+                )
             )
             candidates = [(root, f) for f in mds]
         for base, fname in candidates:
