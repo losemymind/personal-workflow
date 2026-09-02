@@ -13,12 +13,19 @@ Exit code 0 = success.
 import argparse
 import io
 import json
+import re
 import sqlite3
 import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DB_PATH = SCRIPT_DIR.parent / "indexes" / "upstream.db"
+
+# FTS5 (unicode61) does not tokenize CJK, so a MATCH on Chinese returns nothing
+# even when the index contains Chinese descriptions. Detect CJK queries and fall
+# back to substring LIKE matching on the indexed text columns.
+CJK_RE = re.compile(r"[\u4e00-\u9fff]")
+TEXT_COLUMNS = ("skills.name", "skills.description", "skills.tags", "skills.category")
 
 # short alias -> repo substring for --source
 SOURCE_ALIASES = {
@@ -65,10 +72,25 @@ def build_query(args) -> tuple[str, list]:
     params = []
 
     if args.query:
-        clauses.append(
-            "skills.id IN (SELECT rowid FROM skills_fts WHERE skills_fts MATCH ?)"
-        )
-        params.append(args.query)
+        if CJK_RE.search(args.query):
+            tokens = [t for t in args.query.split() if t]
+            like_parts = []
+            for token in tokens:
+                escaped = (
+                    token.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                )
+                pattern = f"%{escaped}%"
+                column_matches = " OR ".join(
+                    f"{col} LIKE ? ESCAPE '\\'" for col in TEXT_COLUMNS
+                )
+                like_parts.append(f"({column_matches})")
+                params.extend([pattern] * len(TEXT_COLUMNS))
+            clauses.append("(" + " AND ".join(like_parts) + ")")
+        else:
+            clauses.append(
+                "skills.id IN (SELECT rowid FROM skills_fts WHERE skills_fts MATCH ?)"
+            )
+            params.append(args.query)
 
     if args.category:
         clauses.append("LOWER(COALESCE(skills.category,'')) = ?")

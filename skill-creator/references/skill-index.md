@@ -26,6 +26,8 @@
 
 内含 FTS5 全文检索表 `skills_fts`，支持关键词匹配 name/description/category/tags。
 
+FTS5 的 `unicode61` 分词器不切分中文，因此**含中文（CJK）的查询**由 `search_index.py` 自动降级为对 name/description/tags/category 的子串 `LIKE` 匹配（按空格分词 AND；`%`/`_` 已转义），可直接用中文关键词检索，无需重建索引文件。英文/ASCII 查询仍走 FTS5。
+
 ## 使用
 
 ```bash
