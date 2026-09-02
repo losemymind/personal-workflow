@@ -284,11 +284,21 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
         # 5b. Backtick path references (`references/xxx.md`, `scripts/xxx.py`, `templates/xxx`)
         # These are the convention used by progressive-disclosure skills (SKILL.md points to
         # on-disk resources with backticks, not markdown links). Keep them resolvable.
-        backtick_refs = set(
-            m
-            for m in re.findall(r"`([^`\s]+\.(?:md|py|sh|json|yaml|yml|ts|js))`", content)
-            if not m.startswith("http") and "/" in m
-        )
+        # Exclude references that appear inside fenced code blocks (examples/demos show
+        # illustrative paths that are not meant to resolve on disk).
+        fenced_ranges = [m.span() for m in re.finditer(r"```.*?```", content, re.DOTALL)]
+
+        def _is_in_fence(pos: int) -> bool:
+            return any(s <= pos < e for s, e in fenced_ranges)
+
+        backtick_refs = set()
+        for m in re.finditer(r"`([^`\s]+\.(?:md|py|sh|json|yaml|yml|ts|js))`", content):
+            ref = m.group(1)
+            if ref.startswith("http") or "/" not in ref:
+                continue
+            if _is_in_fence(m.start()):
+                continue
+            backtick_refs.add(ref)
         for ref in sorted(backtick_refs):
             ref_clean = ref.split("#")[0].strip()
             # Skip placeholders/globs (e.g. <name>, **/SKILL.md, xxx.md, ~/...)

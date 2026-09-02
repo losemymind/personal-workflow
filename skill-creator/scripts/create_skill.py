@@ -73,10 +73,22 @@ def build_skill_md(name, description, category, risk, tools, author, version) ->
     if TEMPLATE_PATH.exists():
         content = TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("your-skill-name", name)
-        content = content.replace('<category>', category)
-        content = content.replace('<none|safe|critical|offensive|unknown>', risk)
         content = content.replace('[tag-one, tag-two]', '[]')
         import re as _re
+        content = _re.sub(
+            r'^category: .*$',
+            f"category: {category}",
+            content,
+            count=1,
+            flags=_re.MULTILINE,
+        )
+        content = _re.sub(
+            r'^risk: .*$',
+            f"risk: {risk}",
+            content,
+            count=1,
+            flags=_re.MULTILINE,
+        )
         content = _re.sub(
             r'^description: ".*?"$',
             f'description: "{description}"',
