@@ -236,13 +236,13 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
 
         # 3b. Body length advisory (progressive disclosure) — NO failure, ever
         # Meta-skills (name == folder == "skill-creator" etc.) are exempt:
-        # they must preserve full methodology, not squeeze into 500 lines.
+        # they must preserve full methodology, not squeeze into 1000 lines.
         if metadata.get("name") == "skill-creator":
             pass  # meta-skill exemption: line count is guidance, not a limit
         else:
             body_lines = content.count("\n") + 1
-            if body_lines > 500:
-                advisories.append(f"ℹ️  {rel_path}: Body is {body_lines} lines (>500). Consider moving details to references/ (guidance only, not a failure).")
+            if body_lines > 1000:
+                advisories.append(f"ℹ️  {rel_path}: Body is {body_lines} lines (>1000). Consider moving details to references/ (guidance only, not a failure).")
 
         # 4. Security guardrails
         if metadata.get("risk") == "offensive":
