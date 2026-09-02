@@ -27,6 +27,13 @@ skill-creator/
 │   ├── skill-template.md       ← 字段与分类完整参考
 │   ├── skill-anatomy.md        ← 结构解剖与渐进式披露
 │   └── quality-bar.md          ← 6 项质量检查与验证标准
+├── examples/                   ← 上游学习样本（MIT 许可，验证豁免）
+│   ├── brainstorming/          ← 单文件·结构教科书
+│   ├── copywriting/            ← 单文件·流程门控
+│   ├── git-pushing/            ← 单文件+scripts·高风险模板
+│   ├── systematic-debugging/   ← 单文件+references·阶段强制序
+│   ├── react-best-practices/   ← 多文件·渐进式披露范本（AGENTS.md+rules/）
+│   └── loki-mode/              ← 综合·复杂工作流范本（references/ 大拆分）
 └── templates/
     └── SKILL.template.md       ← 新技能骨架
 ```
@@ -181,6 +188,7 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 
 ### 阶段 3：设计与脚手架
 
+- 先研究本地 `examples/` 中的 6 个上游学习样本（对应 skill-anatomy 的「研究这些示例」），按需求类型选取参考：结构清晰 → `brainstorming`；高风险操作模板 → `git-pushing`；流程门控 → `copywriting`；阶段强制序 → `systematic-debugging`；多文件渐进式披露 → `react-best-practices`；复杂工作流 → `loki-mode`。
 - 确定技能结构与所需资源（`scripts/`、`references/`、`examples/`、`templates/`）。
 - 结构规范见 `references/skill-anatomy.md`（目录解剖 + 渐进式披露 + 大小指南）。
 - 按「自由度匹配脆弱性」决定结构强度（见 `references/quality-bar.md` 与正文「核心理念」节）。

@@ -119,6 +119,24 @@ skills/
 3. 最后用 `@test-driven-development` 实现
 ```
 
+## 从现有技能学习
+
+### 研究这些示例
+
+本地已收录 6 个上游完整示例（`skill-creator/examples/`，来源 agentic-awesome-skills，MIT 许可；验证器豁免该目录）：
+
+**初学者：**
+- `examples/brainstorming/SKILL.md` — 清晰的结构（阶段化流程 + Understanding Lock 硬门）
+- `examples/git-pushing/SKILL.md` — 简单且专注（高风险操作的安全门 + scripts/ 辅助脚本）
+- `examples/copywriting/SKILL.md` — 良好的门控（Copy Brief Lock + 防虚构规则）
+
+**高级：**
+- `examples/systematic-debugging/SKILL.md` — 全面（4 相强制序 + 红旗清单 + 合理化对照表）
+- `examples/react-best-practices/SKILL.md` — 多个文件（渐进式披露范本：rules/ 按需加载 + AGENTS.md）
+- `examples/loki-mode/SKILL.md` — 复杂工作流（references/ 大拆分 + 决策树首屏 + 状态目录结构）
+
+**学习方式：** 创建技能前先读 1-2 个形态相近的样本，只借鉴结构与方法论（门控、章节组织、渐进式披露），不复制其领域正文。
+
 ## 真实示例分析
 
 ```markdown

@@ -22,6 +22,13 @@ skill-creator/
     quality-bar.md          # 质量标准与验证标准（6 项质量检查）
   templates/
     SKILL.template.md       # 新技能骨架模板
+  examples/                 # 上游学习样本（MIT 许可，验证豁免）
+    brainstorming/          # 单文件·结构教科书
+    copywriting/            # 单文件·流程门控
+    git-pushing/            # 单文件+scripts·高风险模板
+    systematic-debugging/   # 单文件+references·阶段强制序
+    react-best-practices/   # 多文件·渐进式披露范本
+    loki-mode/              # 综合·复杂工作流范本
   <skill-name>/             # 创建的单个技能实例（安装到客户端时只复制该子目录）
     SKILL.md
 ```

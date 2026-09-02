@@ -75,7 +75,7 @@ python skill-creator/scripts/validate_skills.py --strict
 - [x] offensive 技能的安全免责声明（中英均可）
 - [x] offensive 技能的强制用户确认门
 - [x] 本地链接无悬空
-- [x] 跳过隐藏目录与符号链接
+- [x] 跳过隐藏目录、符号链接与 `examples/`（上游学习样本豁免）
 
 ## 支持级别
 

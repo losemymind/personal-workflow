@@ -50,6 +50,16 @@ def configure_utf8_output() -> None:
             )
 
 
+# Directories exempt from validation (upstream learning samples, not our outputs)
+EXEMPT_DIRS = {"examples"}
+
+
+def is_exempt_dir(path: str) -> bool:
+    """Return True if any path segment is an exempted directory name."""
+    parts = path.replace("\\", "/").split("/")
+    return any(p in EXEMPT_DIRS for p in parts)
+
+
 # English + Chinese "when to use" section headers (both accepted)
 WHEN_TO_USE_PATTERNS = [
     re.compile(r"^##\s+When\s+to\s+Use", re.MULTILINE | re.IGNORECASE),
@@ -149,8 +159,8 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
     skill_count = 0
 
     for root, dirs, files in os.walk(skills_dir):
-        # Skip hidden directories (e.g. .disabled)
-        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        # Skip hidden folders (e.g. .disabled) and exempt dirs (e.g. examples/)
+        dirs[:] = [d for d in dirs if not d.startswith(".") and not is_exempt_dir(os.path.join(root, d))]
 
         if "SKILL.md" not in files:
             continue
