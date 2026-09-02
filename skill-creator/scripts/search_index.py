@@ -20,6 +20,16 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 DB_PATH = SCRIPT_DIR.parent / "indexes" / "upstream.db"
 
+# short alias -> repo substring for --source
+SOURCE_ALIASES = {
+    "aas": "sickn33/agentic-awesome-skills",
+    "agentic-awesome-skills": "sickn33/agentic-awesome-skills",
+    "sickn33": "sickn33/agentic-awesome-skills",
+    "addy": "addyosmani/agent-skills",
+    "agent-skills": "addyosmani/agent-skills",
+    "addyosmani": "addyosmani/agent-skills",
+}
+
 
 def configure_utf8_output() -> None:
     if sys.platform != "win32":
@@ -72,6 +82,10 @@ def build_query(args) -> tuple[str, list]:
         clauses.append("COALESCE(skills.tools,'') LIKE ?")
         params.append(f"%{args.tool}%")
 
+    if args.source:
+        clauses.append("skills.source_repo LIKE ?")
+        params.append(f"%{args.source}%")
+
     if args.only_scripts:
         clauses.append("skills.has_script = 1")
     if args.only_references:
@@ -85,7 +99,7 @@ def build_query(args) -> tuple[str, list]:
     sql = (
         "SELECT skills.id, skills.name, skills.path, skills.description, "
         "skills.category, skills.risk, skills.tags, skills.tools, "
-        "skills.has_script, skills.has_references, skills.has_examples, "
+        "skills.source_repo, skills.has_script, skills.has_references, skills.has_examples, "
         "skills.body_lines, skills.file_count "
         f"FROM skills{where} ORDER BY skills.name LIMIT ?"
     )
@@ -97,6 +111,7 @@ def main() -> int:
     configure_utf8_output()
     parser = argparse.ArgumentParser(description="Search upstream skills index")
     parser.add_argument("query", nargs="?", default="", help="Full-text keywords (name/description/category/tags)")
+    parser.add_argument("--source", default=None, help="Filter by upstream source repo (aas / addy / full repo substring; default: all)")
     parser.add_argument("--category", default=None, help="Filter by category (exact)")
     parser.add_argument("--risk", default=None, help="Filter by risk level (none/safe/critical/offensive/unknown)")
     parser.add_argument("--tool", default=None, help="Filter by tool (claude/opencode/codex/deepseek...)")
@@ -107,6 +122,11 @@ def main() -> int:
     parser.add_argument("--stats", action="store_true", help="Show index statistics")
     parser.add_argument("--list-categories", action="store_true", help="List all categories with counts")
     args = parser.parse_args()
+
+    # resolve source alias (aas/addy/...) to a repo substring
+    if args.source:
+        alias = SOURCE_ALIASES.get(args.source.lower(), args.source)
+        args.source = alias
 
     conn = connect()
     cur = conn.cursor()
@@ -119,6 +139,10 @@ def main() -> int:
         print(f"📊 Index: {DB_PATH}")
         print(f"   Built: {built_at['value'] if built_at else 'unknown'}")
         print(f"   Skills: {count['value'] if count else 'unknown'}")
+        print("\n   By source:")
+        cur.execute("SELECT COALESCE(source_repo,'(unknown)') AS src, COUNT(*) AS n FROM skills GROUP BY src ORDER BY n DESC")
+        for row in cur.fetchall():
+            print(f"     {row['n']:>6}  {row['src']}")
         return 0
 
     if args.list_categories:
@@ -127,8 +151,8 @@ def main() -> int:
             print(f"{row['n']:>5}  {row['cat']}")
         return 0
 
-    if not args.query and not args.category and not args.risk and not args.tool and not args.only_scripts and not args.only_references:
-        print("ℹ️  Usage: search_index.py <keywords> [--category X] [--risk Y] ...")
+    if not args.query and not args.category and not args.risk and not args.tool and not args.source and not args.only_scripts and not args.only_references:
+        print("ℹ️  Usage: search_index.py <keywords> [--category X] [--risk Y] [--source aas|addy] ...")
         print("   Try:  search_index.py \"git push\"  or  --list-categories / --stats")
         return 0
 
@@ -150,7 +174,7 @@ def main() -> int:
             flags.append("examples")
         print(f"  {r['name']:<48} [{r['risk'] or '?'}] {r['category'] or '-'}")
         print(f"    {r['description'] or '(no description)'}")
-        print(f"    path: {r['path']} | lines: {r['body_lines']} | files: {r['file_count']}"
+        print(f"    path: {r['path']} | src: {r['source_repo'] or '-'} | lines: {r['body_lines']} | files: {r['file_count']}"
               + (f" | dirs: {','.join(flags)}" if flags else ""))
         print()
     return 0
