@@ -4,7 +4,7 @@ description: "创建、改进并验证个人工作流技能（Skills）。当用
 category: productivity
 risk: safe
 source: self
-version: "0.3.0"
+version: "0.4.0"
 date_added: "2026-09-01"
 author: losemymind
 tags: [skill-creator, skills, workflow, llm-clients]
@@ -54,7 +54,8 @@ skill-creator/
 - 需要改进、重构或评估一个现有技能
 - 需要把一个技能安装到 claude / opencode / codex / deepseek 等客户端的 skills 目录
 - 需要为技能编写测试用例、评估触发准确性、或运行自动验证
-- **若用户只是想"按需安装一个已有的本地技能"** → 不进入本方法论，直接读 `skills/CATALOG.md` 匹配并给 install 命令（本技能阶段 0a 也处理此分支）
+
+> **若用户只是想"按需安装一个已有的本地技能"**（不创建）：由**上层 AGENTS** 处理——读本地能力目录直接给 install 命令，**不进入本技能**（本技能只管"创建 + 与上游对比"）。
 
 ## 资源路径基准
 
@@ -176,17 +177,16 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 
 ## 创建流程（核心工作流）
 
-### 阶段 0：查本地已验证库 + 检索上游（先查后建）
+> **本技能是可独立安装到目标项目的技能**（独立于 personal-workflow 仓库）。被上层 AGENTS 判定「需要创建/改进技能」时调用；**是否调用本技能由上层决定**，本技能不负责检索调用方本地的已验证技能库。
+>
+> **内部闭环（3 步）**：
+> 1. **按用户需求创建一个技能**（阶段 1-4）
+> 2. **检索上游**是否已有同类（阶段 0）——有候选 → 与自建对比（阶段 5.5）取最优；无候选 → 用自建版本
+> 3. **若上游更优** → 采纳并记录 `evolutions/` → 优化本技能方法论（反馈闭环）
 
-动手创建前先回答两个问题（skill-creator 的第一个决策门，避免重复造轮子）：
+### 阶段 0：检索上游技能库（先查后建）
 
-**0a. 本地是否已有合适技能？** 先读本地能力目录 `skills/CATALOG.md`（由 `tools/scripts/build_catalog.py` 从各 `SKILL.md` frontmatter 自动生成，条目 = 已验证技能）：
-
-- **本地有，且用户只是想用** → 按需安装路径：给出条目 `install` 命令（如 `python tools/scripts/install_skill.py skills/<name>`），用户确认后执行，**无需进入创建流程**。
-- **本地有，但需改进** → 以本地版为基座，进入阶段 1。
-- **本地无** → 继续 0b。
-
-**0b. 上游是否已有同类技能？** 在本地索引中检索上游 agentic-awesome-skills：
+动手创建前，**先在本地索引中检索上游 agentic-awesome-skills 是否已有可用技能**（避免重复造轮子，是本技能的第一个决策门）：
 
 ```bash
 python skill-creator/scripts/search_index.py "<用户需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
@@ -199,17 +199,12 @@ python skill-creator/scripts/search_index.py --list-categories      # 列出全�
 - 检索结果给出：技能名/描述/路径/风险/分类/行数/目录结构标志（scripts/references/examples）。
 - 检索详情见 `references/skill-index.md`。
 
-**决策分支（本地 × 上游，5 场景）：**
+**决策分支：**
+- **有匹配候选** → 记录候选；照常进入创建（阶段 1-5），在阶段 5.5 与候选对比择优（自建 vs 上游 → 取最优）。
+- **无匹配候选** → 跳过阶段 5.5，用自建版本。
+- 若上游更优被采纳 → 提炼学习点记录到 `evolutions/`（阶段 5.5），反哺优化本技能。
 
-| 场景 | 本地 `skills/` | 上游索引 | 动作 |
-|---|---|---|---|
-| 1 | ✅ 有 | ✅ 有 | 两者对比取最优 → **最优的替换本地的** |
-| 2 | ✅ 有 | ❌ 无 | 直接用本地的（跳过上游对比） |
-| 3 | ❌ 无 | ✅ 有 | 创建后再与上游对比取最优 → **最优的放入 `skills/`** |
-| 4 | ❌ 无 | ❌ 无 | 创建 → 用创建的放入 `skills/` |
-| 5 | — | 上游更优 | 提炼学习点 → 记录到 `evolutions/` → 优化 skill-creator 方法论 |
-
-> 安装与回馈**永远以本地 `skills/` 为源**；上游只用于「对比择优」，不直接安装（验证优先）。对比见阶段 5.5。
+> **在 personal-workflow 仓库内被调用时的场景**：上层（根 AGENTS）已先读 `skills/CATALOG.md` 取出"本地现有候选 A"，本技能只负责生成"自建/上游最优 B"；A 与 B 谁优由上层对比决定。本技能自身不需要也不应依赖该本地库。
 
 ### 阶段 1：捕捉工作与证据
 

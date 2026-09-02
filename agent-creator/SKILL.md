@@ -4,7 +4,7 @@ description: "创建、改进并验证个人工作流代理（Agents）。当用
 category: productivity
 risk: safe
 source: self
-version: "0.1.0"
+version: "0.2.0"
 date_added: "2026-09-02"
 author: losemymind
 tags: [agent-creator, agents, workflow, llm-clients]
@@ -123,15 +123,29 @@ tools_clients: [claude, opencode, codex, deepseek]  # 可选：声明适用客�
 
 ## 创建流程（核心工作流）
 
+> **本技能是可独立安装到目标项目的技能**（独立于 personal-workflow 仓库）。被上层 AGENTS 判定「需要创建/改进代理」时调用；**是否调用本技能由上层决定**，本技能不负责检索调用方本地的已验证代理库。
+>
+> **内部闭环（3 步）**：
+> 1. **按用户需求创建一个代理**（阶段 1-4）
+> 2. **检索上游**是否已有同类（阶段 0）——有候选 → 对比择优取最优；无候选 → 用自建版本
+> 3. **若上游更优** → 采纳并提炼学习点 → 优化本技能方法论（反馈闭环）
+
 ### 阶段 0：检索上游（先查后建）
 
-与 skill-creator 同一索引：先确认上游是否有现成可用代理，避免重复造轮子：
+与 skill-creator 同一索引：先确认上游是否有可参考/采纳的现成代理或代理编排类技能，避免重复造轮子：
 
 ```bash
 python skill-creator/scripts/search_index.py "<需求关键词>" [--category X] --limit 10
 ```
 
 上游代理类技能（如 agent-orchestrator、agent-manager-skill 等）可能已覆盖需求——优先考虑采纳学习。
+
+**决策分支：**
+- **有匹配候选** → 记录候选；照常创建（阶段 1-4），随后对比择优取最优。
+- **无匹配候选** → 用自建版本。
+- 若上游更优被采纳 → 提炼学习点记录到 `evolutions/`，反哺优化本技能。
+
+> **在 personal-workflow 仓库内被调用时的场景**：上层（根 AGENTS）已先读 `agents/CATALOG.md` 取出"本地现有候选 A"，本技能只负责生成"自建/上游最优 B"；A 与 B 谁优由上层对比决定。本技能自身不需要也不应依赖该本地库。
 
 ### 阶段 1：捕捉角色与证据
 
@@ -182,7 +196,7 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 
 ### 阶段 8：回馈仓库
 
-代理稳定使用后：完善元数据（source/version/tags/tools_clients）→ 放入 `agents/<name>/` → 提交（含测试记录）。
+代理稳定使用后：完善元数据（source/version/tags/tools_clients）→ 放入 `agents/<name>/` → 运行 `python tools/scripts/build_catalog.py` 刷新能力目录 → 提交（含测试记录）。
 
 ## 质量检查清单（提交/入库前）
 

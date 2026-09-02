@@ -51,9 +51,9 @@ AGENTS.md                 # 总编排/分发入口：先定领域再分流
 - `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）
 - deepseek 路径为 best-effort（`DEEPSEEK_HARNESS_ROOT` 覆盖），未实测
 
-### 按需安装（能力目录）
+### 按需安装 + 创建决策（能力目录）
 - `skills/CATALOG.md` / `agents/CATALOG.md`：本地已验证能力清单（LLM 检索 → 命中给 install 命令 → 人类确认）
-- 创建决策流已补「先本地后上游」5 场景（skill-creator 阶段 0 + 三处 AGENTS.md）
+- **职责分层**：skill-creator/agent-creator 是可独立安装的生产器，内部闭环 = 按需创建 → 检索上游对比 → 上游更优反哺自身（`evolutions/`）；**是否调用生成器由根 AGENTS 判定**，上层流程 = 查本地候选 A → 无论有无都调生成器产出 B → A vs B 谁优用谁（根 + 三处 AGENTS + 双 SKILL.md 已统一）
 - agent 字段 schema 与 skill 不同：agent 无 category/source/date_added，用 mode/tags 分类
 
 ### 文档质量
@@ -108,7 +108,7 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | 首个入库技能/代理（pr-summarizer / code-reviewer） | ✅ 已验证并安装到 opencode |
 | agent 生命周期（update/uninstall/rollback） | ✅ 已补齐（目录+单文件形态） |
 | CI（strict 验证 + pytest + 文档检查 + 目录同步） | ✅ 已配置 |
-| 按需安装（能力目录 + 先本地后上游决策流） | ✅ CATALOG.md 生成器 + 三处 AGENTS 引导 + skill-creator 阶段 0 |
+| 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 根/双领域 AGENTS + 双 SKILL.md 已统一分层（生成器闭环 3 步，上层判定是否调用） |
 | 文档引用一致性检查器 | ✅ 零误报 |
 | **deepseek-harness 路径实测** | ⚠️ 未做（需真实环境；`DEEPSEEK_HARNESS_ROOT` 兜底） |
 | **opencode 真实安装待重启验证** | ⚠️ pr-summarizer/code-reviewer 已 install，需重启客户端确认加载 |

@@ -18,9 +18,9 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 
 | 任务类型 | 进入入口 | 说明 |
 |---|---|---|
-| **按需安装**已有技能/代理（用现成能力） | 读 `skills/CATALOG.md` / `agents/CATALOG.md` | 让 LLM 读能力目录匹配需求 → 命中即给 install 命令，确认后执行 |
-| 创建/改进/**技能** | `skill-creator/AGENTS.md` | 技能领域入口（先查本地→再查上游→创建→验证→安装） |
-| 创建/改进/**代理** | `agent-creator/AGENTS.md` | 代理领域入口（先查本地→身份先于指令→创建→验证→安装） |
+| **按需安装**已有技能/代理（用现成能力，不创建） | 读 `skills/CATALOG.md` / `agents/CATALOG.md` | 让 LLM 读能力目录匹配需求 → 命中即给 install 命令，确认后执行 |
+| 创建/改进/**技能** | `skill-creator/AGENTS.md` | 技能领域入口（查本地候选→调生成器→与本地对比取优） |
+| 创建/改进/**代理** | `agent-creator/AGENTS.md` | 代理领域入口（查本地候选→调生成器→与本地对比取优） |
 | 安装/生命周期（通用） | `tools/docs/lifecycle.md` | 安装/升级/卸载/回滚命令 |
 | 其他/不确定 | 继续读本文件 | 总编排兜底 |
 
@@ -30,68 +30,20 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 
 ## 标准工作流
 
-当用户需要"一个做 X 的技能/代理"时，先按上方「入口选择」定位领域，再按该入口的领域工作流执行（**引导型：不自动执行安装**，每步向用户确认后再做）。总览如下：
+需求先按「入口选择」定域。**是否调用 skill-creator / agent-creator（生成器）由本层（根 AGENTS）判定**：
 
-### 1. 查本地已验证库（先查后建）
+- 用户只是**用现成能力**（不创建）→ 走「按需安装」：读对应 `CATALOG.md`，命中即给 install 命令，确认后安装，**不调用生成器**。
+- 用户要**创建/改进能力** → 走「创建」路径（下方），**无论本地是否已有，都调用生成器生成**，再与本地现有对比**谁优用谁**。
 
-```bash
-# 读能力目录，看本地是否已有合适能力（而非直接查上游/新建）
-# 技能：skills/CATALOG.md ；代理：agents/CATALOG.md
-```
+### 创建/改进技能或代理（总览）
 
-- **本地有合适能力且只是想用** → 让 LLM 匹配目录条目，给 install 命令，确认后安装（进第 5 步）。本仓库现有：`pr-summarizer`（skills）、`code-reviewer`（agents）。
-- 本地无合适能力 → 继续。
+以技能为例（代理同构，入口换 `agent-creator/AGENTS.md`）：
 
-### 2. 检索上游（仅技能创建，无本地候选时）
+1. **查本地现有候选**（先查后建）：读 `skills/CATALOG.md`，命中即记作「现有候选 A」（有则可用，无则空）。
+2. **调用 skill-creator 生成**（细节见 `skill-creator/AGENTS.md`）：生成器内部 = **按需求创建 → 检索上游对比 → 产出「自建/上游」最优 B**（上游更优则记录 `evolutions/` 优化生成器）。
+3. **对比 A 与 B** → **谁优用谁**（最优放入 `skills/<name>/`，供验证/安装/回馈）。
 
-```bash
-python skill-creator/scripts/search_index.py "<需求关键词>" [--category X] [--risk Y] [--limit 10]
-```
-
-- 有匹配候选 → 记录候选，继续第 3 步对比
-- 无匹配 → 直接跳到第 4 步创建
-
-### 3. 对比择优（有候选时）
-
-```bash
-python skill-creator/scripts/compare_skills.py <本地候选或新建> <上游候选目录>
-```
-
-- 上游更优 → 建议采纳上游（记录到 `skill-creator/evolutions/`）
-- 自建更优 → 用自建版本
-
-### 4. 创建（无合适技能/代理时）
-
-```bash
-# 创建技能（交互式脚手架 + 验证）
-python skill-creator/scripts/create_skill.py
-python skill-creator/scripts/validate_skills.py --strict --dir skills/<name>
-
-# 创建代理（交互式脚手架 + 验证）
-python agent-creator/scripts/create_agent.py
-python agent-creator/scripts/validate_agents.py --strict --dir agents/<name>
-```
-
-### 5. 验证测试
-
-按 `skill-creator/SKILL.md` 的阶段 5-7 执行：自动验证 → 真实任务测试 → 触发优化（代理按 `agent-creator/SKILL.md` 阶段 5-6）。
-
-### 6. 安装到客户端
-
-```bash
-# 指定客户端安装
-python tools/scripts/install_skill.py --client <claude|opencode|codex|deepseek> <技能目录>
-
-# 自动探测已安装客户端
-python tools/scripts/install_skill.py <技能目录>
-
-# 代理安装（同构）
-python tools/scripts/install_agent.py --client <claude|opencode|codex|deepseek> <代理目录>
-```
-
-### 7. 回馈仓库
-
-稳定使用后：更新元数据（source/date_added/version/tags）→ 放入 `skills/<name>/`（或 `agents/<name>/`）→ 运行 `python tools/scripts/build_catalog.py` 刷新能力目录 → 提交（含 `evolutions/` 对比记录）。
+具体命令（检索上游 / 脚手架 / 对比 / 验证 / 安装）见对应领域入口文件与 `skill-creator/SKILL.md`、`agent-creator/SKILL.md`。
 
 ## 生命周期操作（维护）
 
@@ -109,11 +61,11 @@ python tools/scripts/rollback_agent.py <代理名>
 
 ## 目录导览
 
-- `skill-creator/SKILL.md` — 技能创建方法论（10 阶段工作流，阶段 0 先本地后上游）
+- `skill-creator/SKILL.md` — 技能创建方法论（可独立安装；创建→检索上游→对比择优，上游更优反哺自身）
 - `skill-creator/references/` — 规范参考（template/anatomy/quality-bar/index/comparison）
 - `skill-creator/examples/` — 6 个上游学习样本
 - `skill-creator/evolutions/` — 对比择优学习记录（反馈闭环）
-- `agent-creator/SKILL.md` — 代理创建方法论（身份先于指令、最小权限、协作协议）
+- `agent-creator/SKILL.md` — 代理创建方法论（可独立安装；身份先于指令、最小权限、协作协议）
 - `agent-creator/references/` — 代理规范参考（template/anatomy/quality-bar）
 - `skills/CATALOG.md` / `agents/CATALOG.md` — 已验证能力目录（自动生成）
 - `tools/scripts/build_catalog.py` — 能力目录生成器
@@ -131,7 +83,8 @@ python tools/scripts/rollback_agent.py <代理名>
 
 ## 原则
 
-- **先查后建**：永远先检索上游再创建，避免重复造轮子
-- **验证优先**：未经 `validate_skills.py` 验证的技能不安装
-- **引导不自动**：本文件只指引路径，不代替用户执行安装/提交等副作用操作
+- **先查后建**：创建前先查本地 `CATALOG.md` 取现有候选、再查上游对比，避免重复造轮子
+- **生成必调 / 谁优用谁**：创建/改进需求无论本地有无，都调用对应生成器，生成结果与本地现有对比取最优
+- **引导不自动**：本文件只指引路径，不代替用户执行安装/提交等副作用操作；是否调用生成器由本层判定
+- **验证优先**：未经 `validate_skills.py` / `validate_agents.py` 验证的能力不安装
 - **回馈闭环**：每次"上游更优"的对比都是学习机会（`evolutions/`）
