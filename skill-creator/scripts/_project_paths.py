@@ -1,7 +1,7 @@
 """Locate the repository root (and optionally resolve the skills/ directory).
 
-Works whether this module is executed directly (tools/scripts) or imported
-from elsewhere in the repository.
+Works whether this module is executed directly (skill-creator/scripts) or
+imported from elsewhere in the repository.
 """
 
 import os

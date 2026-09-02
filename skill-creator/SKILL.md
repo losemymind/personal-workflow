@@ -16,6 +16,21 @@ tools: [claude, opencode, codex, deepseek]
 
 本技能指导如何把真实工作流蒸馏为可复用、可验证、跨客户端安装的高质量技能。技能的本质是一组「指令 + 资源」（`SKILL.md` 及其目录），为 LLM 客户端提供精确的触发条件与可预期的操作流程。本技能融合了 5 个成熟 skill-creator 的实践（agentic-awesome-skills 的元数据与质量规范、Anthropic 官方的渐进式披露与迭代测试、Codex 的高信号命名与自由度启发式、agent-skill-creator 的证据驱动与治理）。
 
+本技能目录结构（符合技能解剖标准）：
+
+```
+skill-creator/
+├── SKILL.md                    ← 本方法论
+├── scripts/
+│   └── validate_skills.py      ← 自动验证器（frontmatter/章节/安全/链接）
+├── references/
+│   ├── skill-template.md       ← 字段与分类完整参考
+│   ├── skill-anatomy.md        ← 结构解剖与渐进式披露
+│   └── quality-bar.md          ← 6 项质量检查与验证标准
+└── templates/
+    └── SKILL.template.md       ← 新技能骨架
+```
+
 ## 何时使用此技能
 
 - 用户要求「把这个工作流做成一个技能」、「创建一个 skill」
@@ -156,13 +171,14 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 ### 阶段 3：设计与脚手架
 
 - 确定技能结构与所需资源（`scripts/`、`references/`、`examples/`、`templates/`）。
-- 按「自由度匹配脆弱性」决定结构强度。
+- 结构规范见 `references/skill-anatomy.md`（目录解剖 + 渐进式披露 + 大小指南）。
+- 按「自由度匹配脆弱性」决定结构强度（见 `references/quality-bar.md` 与正文「核心理念」节）。
 - 从最小可行开始，先让技能「跑起来」，再按反馈扩展。
-- 使用 `templates/SKILL.template.md` 作为骨架。
+- 使用 `templates/SKILL.template.md` 作为骨架；字段与分类完整参考见 `references/skill-template.md`。
 
 ### 阶段 4：编写 SKILL.md
 
-按「前置元数据字段规范」与「内容结构与写作指南」两节编写。编写顺序建议：
+按「前置元数据字段规范」与「内容结构与写作指南」两节编写；字段细节见 `references/skill-template.md`，结构规范见 `references/skill-anatomy.md`。编写顺序建议：
 
 1. 先写「何时使用此技能」——明确目的
 2. 再写示例——帮自己理解在教什么
@@ -170,15 +186,15 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 
 ### 阶段 5：运行自动验证
 
-编写完成后、测试前，运行仓库自带验证脚本（基于 agentic-awesome-skills 的验证器实现）：
+编写完成后、测试前，运行技能自带的验证器（基于 agentic-awesome-skills 的验证器实现，位于本技能的 `scripts/`）：
 
 ```bash
-python tools/scripts/validate_skills.py                # 标准模式（警告不阻断）
-python tools/scripts/validate_skills.py --strict       # 严格模式（有警告即失败，适合 CI）
-python tools/scripts/validate_skills.py --dir <skills目录>  # 校验指定目录
+python skill-creator/scripts/validate_skills.py                # 标准模式（警告不阻断）
+python skill-creator/scripts/validate_skills.py --strict       # 严格模式（有警告即失败，适合 CI）
+python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验指定目录（默认本仓库技能目录）
 ```
 
-脚本检查：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、offensive 技能的安全免责声明与用户确认门、示例与限制章节、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
+验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
 
 ### 阶段 6：测试与迭代
 

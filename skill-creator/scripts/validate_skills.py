@@ -1,12 +1,13 @@
 """Validate skills in the PersonalWorkflow repository.
 
+Part of the skill-creator skill (see skill-creator/SKILL.md).
 Adapted from agentic-awesome-skills' tools/scripts/validate_skills.py.
-Checks frontmatter schema, content triggers, security guardrails and
-dangling local links. Supports both English and Chinese section headers
-(our skill template uses '## 何时使用此技能').
+Checks frontmatter schema, content triggers/examples/limitations,
+security guardrails and dangling local links. Supports both English
+and Chinese section headers.
 
 Usage:
-    python tools/scripts/validate_skills.py [--dir <skills_dir>] [--strict]
+    python skill-creator/scripts/validate_skills.py [--dir <skills_dir>] [--strict]
 
 Exit code 0 = all passed, 1 = errors found (or warnings in strict mode).
 """

@@ -11,11 +11,18 @@
 
 ```
 skill-creator/
-  README.md              # 说明
-  SKILL.md               # 核心：创建/改进/验证/安装技能的方法论
+  README.md                 # 说明
+  SKILL.md                  # 核心：创建/改进/验证/安装技能的方法论
+  scripts/
+    validate_skills.py      # 自动验证器（frontmatter/章节/安全/链接）
+    _project_paths.py       # 仓库根定位辅助
+  references/
+    skill-template.md       # 技能模板：字段与分类完整参考
+    skill-anatomy.md        # 技能解剖：结构与渐进式披露
+    quality-bar.md          # 质量标准与验证标准（6 项质量检查）
   templates/
-    SKILL.template.md    # 新技能骨架模板
-  <skill-name>/          # 创建的单个技能实例（安装到客户端时只复制该子目录）
+    SKILL.template.md       # 新技能骨架模板
+  <skill-name>/             # 创建的单个技能实例（安装到客户端时只复制该子目录）
     SKILL.md
 ```
 
@@ -23,6 +30,6 @@ skill-creator/
 
 1. 参考本目录 `SKILL.md` 的技能创建方法论（9 阶段核心工作流）
 2. 使用 `templates/SKILL.template.md` 作为骨架创建你的 Skill
-3. 运行自动验证：`python tools/scripts/validate_skills.py`（或 `--strict` 严格模式）
+3. 运行自动验证：`python skill-creator/scripts/validate_skills.py`（或 `--strict` 严格模式）
 4. 把`<skill-name>/` 目录复制到目标客户端的 skills 目录（Claude: `~/.claude/skills/`、OpenCode: `~/.config/opencode/skills/` 或 `.opencode/skills/`、Codex: `~/.codex/skills/`），重启客户端生效
 5. 经验证的技能提交到仓库 `skills/<skill-name>/`
