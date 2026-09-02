@@ -4,7 +4,7 @@ description: "创建、改进并验证个人工作流技能（Skills）。当用
 category: productivity
 risk: safe
 source: self
-version: "0.4.0"
+version: "0.5.0"
 date_added: "2026-09-01"
 author: losemymind
 tags: [skill-creator, skills, workflow, llm-clients]
@@ -345,7 +345,22 @@ python skill-creator/scripts/compare_skills.py <自建目录> <上游目录> --a
 
 ## 多客户端安装指引
 
-技能本体是通用目录格式 `skills/<name>/SKILL.md`。**推荐使用仓库自带安装器**（支持四端路径解析与 manifest 生命周期管理），安装后需**重启客户端**才会生效：
+技能本体是通用目录格式 `skills/<name>/SKILL.md`，安装 = 把该目录放到目标客户端的 skills 目录，重启客户端生效。
+
+### 通用方式：直接放置到客户端目录
+
+不依赖任何仓库工具，四种客户端均可手动放置（以目标客户端官方文档为准）：
+
+- **Claude Code**：`~/.claude/skills/<name>/`（用户级）；项目级放 `.claude/skills/<name>/`。技能触发依据是 `description`。
+- **OpenCode**：用户级 `~/.config/opencode/skills/<name>/SKILL.md`；项目级 `.opencode/skills/<name>/SKILL.md`；也可在 `opencode.json` 的 `skills.paths` 注册任意目录（loader 递归扫描 `**/SKILL.md`）。
+- **Codex（OpenAI）**：需要启用 experimental `skills` 特性；`name` ≤100 字符、`description` ≤500 字符单行；`~/.codex/skills/<name>/SKILL.md`，正文在 `/skills` 或 `$<skill-name>` 时才注入。
+- **DeepSeek Harness**：技能目录路径以当前版本官方文档为准（用户级通常位于该工具 config 目录下的 `skills/`，可设 `DEEPSEEK_HARNESS_ROOT` 覆盖）。
+
+安装后验证：用一个真实小任务触发试运行，确认技能被正确加载、按指令执行。
+
+### 若随附于含 tools/ 的仓库（可选便利）
+
+当本技能随附的目录同时提供 `tools/scripts/install_skill.py` 时（如 PersonalWorkflow 仓库），可用安装器完成路径解析 + manifest 生命周期记账：
 
 ```bash
 python tools/scripts/install_skill.py --client <claude|opencode|codex|deepseek> <技能目录>   # 指定客户端
@@ -353,16 +368,7 @@ python tools/scripts/install_skill.py <技能目录>                            
 python tools/scripts/install_skill.py <技能目录> --dry-run                                   # 只预览目标路径
 ```
 
-各客户端实际路径（由 `tools/scripts/client_paths.py` 统一解析）：
-
-- **Claude Code**：`~/.claude/skills/<name>/`（用户级）；项目级放 `.claude/skills/<name>/`。技能触发依据是 `description`。
-- **OpenCode**：用户级 `~/.config/opencode/skills/<name>/SKILL.md`；项目级 `.opencode/skills/<name>/SKILL.md`；也可在 `opencode.json` 的 `skills.paths` 注册任意目录（loader 递归扫描 `**/SKILL.md`）。
-- **Codex（OpenAI）**：需要启用 experimental `skills` 特性；`name` ≤100 字符、`description` ≤500 字符单行；`~/.codex/skills/<name>/SKILL.md`，正文在 `/skills` 或 `$<skill-name>` 时才注入。
-- **DeepSeek Harness**：技能目录路径以当前版本官方文档为准（用户级通常位于该工具 config 目录下的 `skills/`，可设 `DEEPSEEK_HARNESS_ROOT` 覆盖）；安装后重启并验证触发。
-
-安装后验证：用一个真实小任务触发试运行，确认技能被正确加载、按指令执行。
-
-已安装技能的生命周期（升级/卸载/回滚）使用仓库工具管理，详见 `tools/docs/lifecycle.md`：
+生命周期（升级/卸载/回滚）同样由该仓库工具管理：
 
 ```bash
 python tools/scripts/update_skill.py <技能名> --source <新版目录>
@@ -370,10 +376,11 @@ python tools/scripts/uninstall_skill.py <技能名>
 python tools/scripts/rollback_skill.py <技能名>
 ```
 
+> **独立安装时无 tools/**：脱离含 tools/ 的仓库单独安装本技能时，用上面的「通用方式」手动放置即可——本技能目录不捆绑安装器。
+
 ## 相关技能
 
 - `agent-creator` — 创建自定义 Agent（技能沉淀到一定规模后，可升级为专职 Agent）
-- `personal-workflow` AGENTS.md — 项目引导：从本仓库查找并安装适用的技能/Agent
 
 ## 常见问题
 

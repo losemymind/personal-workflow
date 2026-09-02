@@ -12,13 +12,19 @@ agent-creator/
   scripts/
     create_agent.py                # 交互式脚手架生成器
     validate_agents.py             # 自动验证器（frontmatter/边界/权限/协作/链接）
+    search_agent_index.py          # 检索上游代理索引（FTS5/CJK/分类过滤）
+    build_agent_index.py           # 构建上游代理索引（三源：agency/ccgs/agency-zh）
     _project_paths.py              # 仓库根定位辅助
+  indexes/
+    upstream.db                    # 上游代理 SQLite 索引（随技能分发，克隆即得）
   references/
     agent-template.md              # 代理模板：字段与四端兼容矩阵
     agent-anatomy.md               # 代理解剖：结构与技能/代理取舍
     agent-quality-bar.md           # 质量标准（5 项质量检查）
+    agent-index.md                 # 上游代理索引：构建/检索/更新说明
   templates/
     AGENT.template.md              # 新代理骨架
+  evolutions/                      # 对比择优学习记录（反馈闭环）
   <agent-name>/                    # 创建的单个代理实例（安装到客户端时复制该目录）
     AGENT.md
 ```
@@ -26,10 +32,11 @@ agent-creator/
 ## 使用
 
 1. 参考本目录 `SKILL.md` 的代理创建方法论
-2. 使用 `templates/AGENT.template.md` 作为骨架（或 `create_agent.py` 脚手架）
-3. 运行自动验证：`python agent-creator/scripts/validate_agents.py --dir <你的代理目录>`
-4. 安装到客户端：`python tools/scripts/install_agent.py [--client ...] <代理目录>`
-5. 经验证的代理提交到仓库 `agents/<agent-name>/`
+2. 先查上游代理索引（先查后建）：`python agent-creator/scripts/search_agent_index.py "<关键词>"`（如无现成再创建）
+3. 使用 `templates/AGENT.template.md` 作为骨架（或 `create_agent.py` 脚手架）
+4. 运行自动验证：`python agent-creator/scripts/validate_agents.py --dir <你的代理目录>`
+5. 安装到客户端：直接放置到目标客户端 agents 目录（或随附 tools/ 时用 `install_agent.py`）
+6. 经验证的代理归档到 `agents/<agent-name>/`
 
 ## 技能 vs 代理
 

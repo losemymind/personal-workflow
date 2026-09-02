@@ -43,9 +43,14 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 - `opencode.json` 已注册 `skills.paths = ["skill-creator", "agent-creator"]`
 
 ### agent-creator（代理生产器）
-- `SKILL.md`：身份先于指令 / 最小权限 / 协作协议 / 升级路径
-- `references/`：agent-template（四端兼容矩阵）/ agent-anatomy / agent-quality-bar
-- 脚本：`create_agent.py`（脚手架）、`validate_agents.py`（边界/权限/协作/链接校验）
+- `SKILL.md`：身份先于指令 / 最小权限 / 协作协议 / 升级路径 / 独立安装（不含上层编排）
+- 上游**三源 SQLite 索引** `agent-creator/indexes/upstream.db`（568 代理）：
+  - `agency` = msitarzewski/agency-agents（258，division 目录扫描）
+  - `ccgs` = Donchitos/Claude-Code-Game-Studios（49，.claude/agents 扫描）
+  - `agency-zh` = jnMetaCode/agency-agents-zh（261，中文版，含公司/法务/HR/供应链等 division）
+- 脚本：`search_agent_index.py`（检索/--source/stats/--list-categories，含 CJK LIKE 兜底）、`build_agent_index.py`（多源构建/--from-extracted）、`create_agent.py`（脚手架）、`validate_agents.py`（边界/权限/协作/链接校验）
+- `references/`：agent-template（四端兼容矩阵）/ agent-anatomy / agent-quality-bar / agent-index（索引说明）
+- `evolutions/`：对比学习记录（与 skill-creator 同构，模板见 README）
 
 ### tools（分发与生命周期）
 - `client_paths.py`：四端路径矩阵（唯一事实源）

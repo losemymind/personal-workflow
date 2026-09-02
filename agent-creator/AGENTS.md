@@ -75,7 +75,10 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 | `references/agent-template.md` | 需要字段细节/四端兼容矩阵时 |
 | `references/agent-anatomy.md` | 需要结构规范/技能代理取舍时 |
 | `references/agent-quality-bar.md` | 需要质量标准/验证器检查项时 |
+| `references/agent-index.md` | 需要检索上游/索引构建更新时 |
 | `templates/AGENT.template.md` | 骨架模板（脚手架可自动生成） |
+| `indexes/upstream.db` | 检索上游代理（已随技能分发，克隆即得） |
+| `evolutions/` | 记录"上游更优"对比结论（反馈闭环） |
 
 ## 相关技能
 

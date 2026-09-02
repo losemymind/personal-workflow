@@ -4,7 +4,7 @@ description: "创建、改进并验证个人工作流代理（Agents）。当用
 category: productivity
 risk: safe
 source: self
-version: "0.2.0"
+version: "0.3.0"
 date_added: "2026-09-02"
 author: losemymind
 tags: [agent-creator, agents, workflow, llm-clients]
@@ -15,7 +15,7 @@ tools: [claude, opencode, codex, deepseek]
 
 ## 概述
 
-本技能指导如何把**工作角色与职责边界**蒸馏为可复用、可验证、跨客户端安装的高质量代理（Agent）。代理与技能不同：技能是「任务怎么做」的指令集，代理是「谁来负责、以什么身份、带什么权限、怎么协作」的角色定义。本技能与 skill-creator 平行同构——四端客户端（claude/opencode/codex/deepseek-harness）的代理格式差异由 `references/agent-template.md` 统一承载，安装与生命周期复用 `tools/scripts/`。
+本技能指导如何把**工作角色与职责边界**蒸馏为可复用、可验证、跨客户端安装的高质量代理（Agent）。代理与技能不同：技能是「任务怎么做」的指令集，代理是「谁来负责、以什么身份、带什么权限、怎么协作」的角色定义。四端客户端（claude/opencode/codex/deepseek-harness）的代理格式差异由 `references/agent-template.md` 统一承载，安装通过直接放置或（随附含 tools/ 时）复用其安装器完成。
 
 一个代理 = **身份定义 + 职责边界 + 工具权限 + 协作协议**，用 AGENT.md（含 frontmatter）表达。
 
@@ -50,7 +50,7 @@ tools: [claude, opencode, codex, deepseek]
 
 ### 最小权限
 
-代理的工具权限遵循**最小权限原则**：只授予完成职责必需的工具。审查代理不该有编辑权限，规划代理不该有执行权限。权限声明清晰可审计（参考 git-pushing 示例的安全门思路）。
+代理的工具权限遵循**最小权限原则**：只授予完成职责必需的工具。审查代理不该有编辑权限，规划代理不该有执行权限。权限声明清晰可审计（高风险动作显式声明并默认拒绝，必要时请求用户确认）。
 
 ### 渐进式披露（与 skill-creator 同构）
 
@@ -58,12 +58,12 @@ tools: [claude, opencode, codex, deepseek]
 
 ## 资源路径基准
 
-本技能内部所有资源引用（`references/`、`scripts/`、`templates/`）均以**技能目录本身**为基准，而非当前工作目录：
+本技能内部所有资源引用（`references/`、`scripts/`、`templates/`、`indexes/upstream.db`、`evolutions/`）均以**技能目录本身**为基准，而非当前工作目录：
 
-- **在本仓库内运行**：真实路径为 `agent-creator/references/xxx.md`、`agent-creator/scripts/xxx.py`、`agent-creator/templates/AGENT.template.md`。
+- **在本仓库内运行**：真实路径为 `agent-creator/references/xxx.md`、`agent-creator/scripts/xxx.py`、`agent-creator/templates/AGENT.template.md`、`agent-creator/indexes/upstream.db`。
 - **安装到客户端后**：真实路径为客户端技能目录（如 `~/.config/opencode/skills/agent-creator/...`），以实际安装位置为准。
 
-读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，需要结构规范时读 `references/agent-anatomy.md`，需要质量标准时读 `references/agent-quality-bar.md`。
+读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，需要结构规范时读 `references/agent-anatomy.md`，需要质量标准时读 `references/agent-quality-bar.md`，需要检索上游/索引细节时读 `references/agent-index.md`。
 
 ## 代理文件解剖（Anatomy）
 
@@ -130,18 +130,22 @@ tools_clients: [claude, opencode, codex, deepseek]  # 可选：声明适用客�
 > 2. **检索上游**是否已有同类（阶段 0）——有候选 → 对比择优取最优；无候选 → 用自建版本
 > 3. **若上游更优** → 采纳并提炼学习点 → 优化本技能方法论（反馈闭环）
 
-### 阶段 0：检索上游（先查后建）
+### 阶段 0：检索上游代理（先查后建）
 
-与 skill-creator 同一索引：先确认上游是否有可参考/采纳的现成代理或代理编排类技能，避免重复造轮子：
+先在**本技能自带的上游代理索引**中检索是否有可参考/采纳的现成代理，避免重复造轮子：
 
 ```bash
-python skill-creator/scripts/search_index.py "<需求关键词>" [--category X] --limit 10
+python agent-creator/scripts/search_agent_index.py "<需求关键词>" [--source agency|ccgs|agency-zh] [--category X] [--limit 10]
+python agent-creator/scripts/search_agent_index.py --stats               # 索引状态
+python agent-creator/scripts/search_agent_index.py --list-categories     # 分类（division）分布
 ```
 
-上游代理类技能（如 agent-orchestrator、agent-manager-skill 等）可能已覆盖需求——优先考虑采纳学习。
+- 索引文件 `agent-creator/indexes/upstream.db` 已随技能分发，无需联网即可检索。
+- 覆盖三个上游代理仓库（msitarzewski/agency-agents、Donchitos/Claude-Code-Game-Studios、jnMetaCode/agency-agents-zh），含中文代理（`agency-zh`）；英文/中文关键词均可检索。索引细节见 `references/agent-index.md`。
+- 索引落后于上游时运行 `python agent-creator/scripts/build_agent_index.py` 重建。
 
 **决策分支：**
-- **有匹配候选** → 记录候选；照常创建（阶段 1-4），随后对比择优取最优。
+- **有匹配候选** → 记录候选；照常创建（阶段 1-4），随后与候选对比择优取最优。
 - **无匹配候选** → 用自建版本。
 - 若上游更优被采纳 → 提炼学习点记录到 `evolutions/`，反哺优化本技能。
 
@@ -160,11 +164,11 @@ python skill-creator/scripts/search_index.py "<需求关键词>" [--category X] 
 
 ### 阶段 2：确认唯一「人力决策点」
 
-与 skill-creator 相同：涉及权限授予、生产数据、外部动作的决策必须由用户确认。无法确认 → `BLOCKED`，不替用户拍板。
+涉及权限授予、生产数据、外部动作的决策必须由用户确认。无法确认 → `BLOCKED`，不替用户拍板。
 
 ### 阶段 3：设计与脚手架
 
-- 先研究 `skill-creator/examples/` 中的样本与上游代理类技能的结构。
+- 参考 `references/agent-template.md` 的四端字段兼容矩阵与 `references/agent-anatomy.md` 的结构规范；研究上游候选（阶段 0 命中）的身份表述、边界与协作写法作为范本。
 - 使用 `templates/AGENT.template.md` 骨架（或 `python agent-creator/scripts/create_agent.py --name <名> --mode subagent --out <目录>`）。
 - 按「身份先于指令」与「最小权限」确定职责边界与工具列表。
 
@@ -186,15 +190,14 @@ python agent-creator/scripts/validate_agents.py [--dir <agents目录>] [--strict
 
 ### 阶段 7：安装与验证
 
-```bash
-python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>] <agents/你的代理目录>
-```
+安装 = 把 AGENT.md（或代理目录）放到目标客户端的 agents 目录，重启后调用验证。
 
-安装后重启客户端，用真实场景调用一次确认代理被正确加载。生命周期（更新/卸载/回滚）见 `tools/docs/lifecycle.md`。
+- **通用方式（独立可用）**：直接放置到「多客户端安装指引」所列客户端目录。
+- **若随附含 tools/ 的仓库（可选便利）**：用仓库安装器 `python tools/scripts/install_agent.py [--client <...>] <代理目录>`（支持四端路径解析 + manifest 生命周期记账）。
 
-### 阶段 8：回馈仓库
+### 阶段 8：沉淀稳定代理
 
-代理稳定使用后：完善元数据（source/version/tags/tools_clients）→ 放入 `agents/<name>/` → 运行 `python tools/scripts/build_catalog.py` 刷新能力目录 → 提交（含测试记录）。
+代理稳定使用后：完善元数据（source/version/tags/tools_clients）→ 归档到可分发位置（若在 PersonalWorkflow 仓库内则放入 `agents/<name>/`）→ 含测试记录一并沉淀。
 
 ## 质量检查清单（提交/入库前）
 
@@ -229,14 +232,12 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 
 ## 多客户端安装指引
 
-代理本体是 `agents/<name>/AGENT.md`。**用仓库自带安装器**（四端路径由 `tools/scripts/client_paths.py` 解析）：
+代理本体是单文件 `AGENT.md`（或含 references 的目录 `agents/<name>/`）。安装 = 放到目标客户端的 agents 目录，重启客户端生效。
 
-```bash
-python tools/scripts/install_agent.py --client opencode agents/<name>   # 指定客户端
-python tools/scripts/install_agent.py agents/<name>                     # 自动探测
-```
+### 通用方式：直接放置到客户端目录
 
-各客户端 agents 目录（详见 `tools/docs/lifecycle.md` 路径矩阵）：
+不依赖任何仓库工具，四种客户端均可手动放置（以目标客户端官方文档为准）：
+
 - **Claude Code**：`~/.claude/agents/<name>.md`（或目录）
 - **OpenCode**：`~/.config/opencode/agent/<name>.md`；项目级 `.opencode/agent/`
 - **Codex**：`~/.codex/agents/<name>.md`
@@ -244,10 +245,22 @@ python tools/scripts/install_agent.py agents/<name>                     # 自动
 
 注意：不同客户端对代理 frontmatter 的字段支持不同（mode/model/permission 等），安装时以目标客户端文档为准；`references/agent-template.md` 有完整兼容矩阵。
 
+### 若随附于含 tools/ 的仓库（可选便利）
+
+当本技能随附的目录同时提供 `tools/scripts/install_agent.py` 时（如 PersonalWorkflow 仓库），可用安装器完成路径解析 + manifest 生命周期记账：
+
+```bash
+python tools/scripts/install_agent.py --client opencode agents/<name>   # 指定客户端
+python tools/scripts/install_agent.py agents/<name>                     # 自动探测
+```
+
+生命周期（更新/卸载/回滚）同样由该仓库工具管理。
+
+> **独立安装时无 tools/**：脱离含 tools/ 的仓库单独安装本技能时，用上面的「通用方式」手动放置即可——本技能目录不捆绑安装器。
+
 ## 相关技能
 
 - `skill-creator` — 创建技能（代理职责内的「怎么做」环节用技能承载）
-- `personal-workflow` AGENTS.md — 项目引导：从本仓库查找并安装适用的技能/代理
 
 ## 常见问题
 
@@ -258,7 +271,7 @@ A: 需要常驻角色、权限、协作协议 → 代理；只是一次性步骤
 A: 用兼容子集（name/description/version/tags）+ `tools_clients` 声明；安装时按客户端转换（见 `agent-template.md` 的兼容矩阵）。
 
 **Q: 代理需要跨多个职责？**
-A: 保持单一职责——一个代理一件事，协作流程解决多角色需求（参考系统化调试示例中的 subagent 协作模式）。
+A: 保持单一职责——一个代理一件事，协作流程解决多角色需求（多个代理通过协作协议互相调用）。
 
 **Q: 代理与子代理（subagent）？**
 A: mode=subagent 的代理被主代理调用，用于隔离上下文与专注任务；mode=primary 用于用户直接对话。
