@@ -155,6 +155,8 @@ def collect_validation_results(agents_dir: str, strict_mode: bool = False) -> di
                     "development-plan.md",
                     "agents.md",
                     "skill.md",
+                    "catalog.md",
+                    "catalog",
                 )
             )
             candidates = [(root, f) for f in mds]

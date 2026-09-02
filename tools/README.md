@@ -17,7 +17,9 @@ tools/
     ├── uninstall_skill.py # 卸载技能
     ├── uninstall_agent.py # 卸载代理
     ├── rollback_skill.py  # 回滚技能到上一版本
-    └── rollback_agent.py  # 回滚代理到上一版本
+    ├── rollback_agent.py  # 回滚代理到上一版本
+    ├── build_catalog.py   # 生成 skills/CATALOG.md + agents/CATALOG.md（--check 防漂移）
+    └── check_docs_refs.py # 文档引用与 git 索引大小写敏感校验
 ```
 
 ## 设计约定
@@ -35,4 +37,4 @@ tools/
 
 ## 演进
 
-首个版本聚焦"技能分发与生命周期"；后续可扩展：索引同步、跨客户端安装批量脚本、仓库级状态报告。
+首个版本聚焦"技能分发与生命周期"；能力目录生成器（build_catalog.py）已补齐按需安装的发现层；后续可扩展：索引同步、跨客户端安装批量脚本、仓库级状态报告。

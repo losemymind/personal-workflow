@@ -15,6 +15,7 @@
 ```
 skills/
 ├── README.md
+├── CATALOG.md             # 自动生成的能力目录（勿手改；见 tools/scripts/build_catalog.py）
 └── <skill-name>/          # kebab-case，与 SKILL.md 的 name 一致
     ├── SKILL.md
     ├── scripts/           # 可选：辅助脚本
@@ -29,8 +30,13 @@ skills/
 - 从本目录安装技能到 LLM 客户端 → 使用 `tools/scripts/install_skill.py`
 - 技能更新/卸载/回滚 → 使用 `tools/scripts/` 对应命令
 
+## 能力目录（CATALOG.md）
+
+`CATALOG.md` 由 `tools/scripts/build_catalog.py` 从各 `SKILL.md` frontmatter 自动生成（勿手改）。它是 LLM 按需安装的检索入口：读目录匹配需求 → 命中即给条目 `install` 命令，用户确认后执行。新增/删除技能后重跑生成器（CI 用 `--check` 防漂移）。
+
 ## 回馈流程
 
 1. 技能在本目录验证通过并稳定使用一段时间
 2. 补充 frontmatter 元数据（source/date_added/author/tags）
-3. 提交到仓库（含 evolutions/ 对比记录）
+3. 运行 `python tools/scripts/build_catalog.py` 刷新能力目录
+4. 提交到仓库（含 evolutions/ 对比记录）

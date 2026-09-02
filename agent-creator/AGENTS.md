@@ -5,6 +5,7 @@
 ## 何时进入本文件
 
 - 用户要求「把这个角色做成一个代理」「创建一个 agent」「改进现有代理」
+- 用户要「按需安装/找一个已有的本地代理」→ 先读 `agents/CATALOG.md`
 - 需要一个常驻 LLM 角色（审查者、调试者、规划者、测试者等）持续参与工作
 - 需要子代理（subagent）承担独立职责的任务
 - 需要为代理安装到 claude / opencode / codex / deepseek 客户端
@@ -14,9 +15,17 @@
 
 ## 领域工作流（引导型：每步向用户确认后再执行）
 
+### 第一步：查本地已验证库
+
+用户要「一个做 X 的代理」时，**先读本地能力目录 `agents/CATALOG.md`**（由 `tools/scripts/build_catalog.py` 从各 `AGENT.md` frontmatter 自动生成，条目 = 已验证代理）判断本地是否已有合适代理：
+
+- **本地有合适代理，且用户只是想用** → 让 LLM 读目录匹配，命中后给出条目的 `install` 命令（如 `python tools/scripts/install_agent.py agents/code-reviewer`），**用户确认后**再执行。
+- **本地有合适代理，但需改进** → 进入下方改进流程，以本地版为基座迭代。
+- **本地无合适代理** → 进入下方创建流程。
+
 ### 1. 明确角色与边界（先问后建）
 
-先确认角色的**身份与边界**（不必一次问完，逐条确认）：
+本地无合适代理时，先确认角色的**身份与边界**（不必一次问完，逐条确认）：
 - 角色一句话怎么说？被谁调用、何时调用？
 - 必须做什么？**坚决拒绝做什么**？（边界是代理质量的核心）
 - 需要哪些工具？哪些绝不该碰？（最小权限）
@@ -54,7 +63,7 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 
 ### 6. 回馈仓库
 
-代理稳定后：完善元数据（source/version/tags/tools_clients）→ 放入 `agents/<name>/` → 提交（含测试记录）。
+代理稳定后：完善元数据（source/version/tags/tools_clients）→ 放入 `agents/<name>/` → 运行 `python tools/scripts/build_catalog.py` 刷新能力目录 → 提交（含测试记录）。
 
 ## 资源导览（按需读取）
 
@@ -65,6 +74,7 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 | `references/agent-anatomy.md` | 需要结构规范/技能代理取舍时 |
 | `references/agent-quality-bar.md` | 需要质量标准/验证器检查项时 |
 | `templates/AGENT.template.md` | 骨架模板（脚手架可自动生成） |
+| `agents/CATALOG.md` | 按需安装/本地查找时（自动生成，见 `tools/scripts/build_catalog.py`） |
 
 ## 与总编排的关系
 

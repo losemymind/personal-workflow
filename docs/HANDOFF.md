@@ -16,13 +16,15 @@ AGENTS.md                 # 总编排/分发入口：先定领域再分流
 ├── tools/docs/lifecycle.md   # 安装/生命周期通用入口
 ├── skills/               # 已验证技能库（回馈目标；现有 pr-summarizer）
 ├── agents/               # 已验证代理库（回馈目标；现有 code-reviewer）
-├── tools/scripts/        # 四端安装器 + 生命周期（manifest-driven）
-├── tests/                # pytest（11 用例，覆盖验证器/路径矩阵）
-├── .github/workflows/validate.yml  # CI：双验证器 --strict + pytest + 文档引用检查
-└── docs/                 # DEVELOPMENT-PLAN.md（开发计划）、HANDOFF.md（本文件）
+├── tools/scripts/        # 四端安装器 + 生命周期 + 能力目录生成器（manifest-driven）
+├── tests/                # pytest（22 用例，覆盖验证器/路径矩阵/生成器）
+├── .github/workflows/validate.yml  # CI：双验证器 --strict + pytest + 文档引用 + 目录同步
+└── docs/                 # DEVELOPMENT-PLAN.md（开发计划）、HANDOFF.md（本文件）、ON-DEMAND-INSTALL.md（按需安装方案）
 ```
 
-**核心原则**：先查后建（检索上游索引）→ 引导不自动（AGENTS.md 只指引）→ 验证优先 → 回馈闭环（`evolutions/` 记录"上游更优"的学习点）。
+**核心原则**：先查后建（**先本地 `skills/CATALOG.md`/`agents/CATALOG.md`、后上游索引**）→ 引导不自动（AGENTS.md 只指引）→ 验证优先 → 回馈闭环（`evolutions/` 记录"上游更优"的学习点）。
+
+**按需安装**：`skills/CATALOG.md` 与 `agents/CATALOG.md` 由 `tools/scripts/build_catalog.py` 从各 frontmatter 自动生成（勿手改，CI `--check` 防漂移），是 LLM 读目录匹配需求 → 给出 `install` 命令的机器可读清单。上游库（aas/addy）只在 skill-creator 创建/对比流程使用，不是安装源。
 
 ## 3. 已交付能力（按模块）
 
@@ -44,9 +46,15 @@ AGENTS.md                 # 总编排/分发入口：先定领域再分流
 ### tools（分发与生命周期）
 - `client_paths.py`：四端路径矩阵（唯一事实源）
 - `install_skill.py` / `install_agent.py`：四端安装（manifest 标记 `.personal-workflow-manifest.json`）
+- `build_catalog.py`：能力目录生成器（`skills/CATALOG.md` + `agents/CATALOG.md`，`--check` 防漂移）
 - `update/uninstall/rollback_skill.py` + `_agent.py`：生命周期（备份至 `~/.personal-workflow/backups/`）
 - `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）
 - deepseek 路径为 best-effort（`DEEPSEEK_HARNESS_ROOT` 覆盖），未实测
+
+### 按需安装（能力目录）
+- `skills/CATALOG.md` / `agents/CATALOG.md`：本地已验证能力清单（LLM 检索 → 命中给 install 命令 → 人类确认）
+- 创建决策流已补「先本地后上游」5 场景（skill-creator 阶段 0 + 三处 AGENTS.md）
+- agent 字段 schema 与 skill 不同：agent 无 category/source/date_added，用 mode/tags 分类
 
 ### 文档质量
 - 根 `AGENTS.md` / `skill-creator/AGENTS.md` / `agent-creator/AGENTS.md` 分层入口
@@ -56,7 +64,16 @@ AGENTS.md                 # 总编排/分发入口：先定领域再分流
 ## 4. 常用命令速查
 
 ```bash
-# 检索上游（先查后建）—— 默认全库，--source aas|addy 过滤
+# 按需安装已有能力（先查后建：本地优先）—— 让 LLM 读目录匹配，命中给 install 命令
+#   skills/CATALOG.md  ·  agents/CATALOG.md
+python tools/scripts/install_skill.py [--client opencode|claude|codex|deepseek] skills/<name>
+python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/<name>
+
+# 能力目录：生成 / 校验（新增回馈后跑，CI 用 --check）
+python tools/scripts/build_catalog.py
+python tools/scripts/build_catalog.py --check
+
+# 检索上游（仅技能创建对比时）—— 默认全库，--source aas|addy 过滤
 python skill-creator/scripts/search_index.py "<关键词>" [--source addy] [--category X]
 
 # 索引：重建/增量
@@ -72,15 +89,15 @@ python agent-creator/scripts/validate_agents.py --strict --dir agents/x
 # 对比择优（有上游候选时）
 python skill-creator/scripts/compare_skills.py <自建目录> <上游目录>
 
-# 安装 + 生命周期
-python tools/scripts/install_skill.py [--client opencode|claude|codex|deepseek] <技能目录>
+# 生命周期
 python tools/scripts/update_skill.py <名> --source <新版>   # 代理用 _agent 版同构
 python tools/scripts/uninstall_skill.py <名>
 python tools/scripts/rollback_skill.py <名>
 
 # 测试/CI 等价
-python -m pytest tests/ -q          # 11 用例
+python -m pytest tests/ -q          # 22 用例
 python tools/scripts/check_docs_refs.py   # 文档引用完整性（exit 0）
+python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 ```
 
 ## 5. 当前状态与未完成事项
@@ -90,12 +107,13 @@ python tools/scripts/check_docs_refs.py   # 文档引用完整性（exit 0）
 | 双源索引（aas+addy，2132 技能） | ✅ 已重建入库 |
 | 首个入库技能/代理（pr-summarizer / code-reviewer） | ✅ 已验证并安装到 opencode |
 | agent 生命周期（update/uninstall/rollback） | ✅ 已补齐（目录+单文件形态） |
-| CI（strict 验证 + pytest + 文档检查） | ✅ 已配置 |
+| CI（strict 验证 + pytest + 文档检查 + 目录同步） | ✅ 已配置 |
+| 按需安装（能力目录 + 先本地后上游决策流） | ✅ CATALOG.md 生成器 + 三处 AGENTS 引导 + skill-creator 阶段 0 |
 | 文档引用一致性检查器 | ✅ 零误报 |
 | **deepseek-harness 路径实测** | ⚠️ 未做（需真实环境；`DEEPSEEK_HARNESS_ROOT` 兜底） |
 | **opencode 真实安装待重启验证** | ⚠️ pr-summarizer/code-reviewer 已 install，需重启客户端确认加载 |
 | **上游索引更新频率** | 建议定期 `--incremental` 手动同步 |
-| **新技能/代理持续沉淀** | 按需用本仓库流程创建后回馈到 skills/、agents/ |
+| **新技能/代理持续沉淀** | 按需用本仓库流程创建后回馈到 skills/、agents/（重跑 build_catalog.py） |
 
 ## 6. 给新会话的开场提示
 

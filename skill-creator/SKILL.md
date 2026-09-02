@@ -54,6 +54,7 @@ skill-creator/
 - 需要改进、重构或评估一个现有技能
 - 需要把一个技能安装到 claude / opencode / codex / deepseek 等客户端的 skills 目录
 - 需要为技能编写测试用例、评估触发准确性、或运行自动验证
+- **若用户只是想"按需安装一个已有的本地技能"** → 不进入本方法论，直接读 `skills/CATALOG.md` 匹配并给 install 命令（本技能阶段 0a 也处理此分支）
 
 ## 资源路径基准
 
@@ -175,9 +176,17 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 
 ## 创建流程（核心工作流）
 
-### 阶段 0：检索上游技能库（先查后建）
+### 阶段 0：查本地已验证库 + 检索上游（先查后建）
 
-动手创建前，**先在本地索引中检索上游 agentic-awesome-skills 是否已有可用技能**（避免重复造轮子，是 skill-creator 的第一个决策门）：
+动手创建前先回答两个问题（skill-creator 的第一个决策门，避免重复造轮子）：
+
+**0a. 本地是否已有合适技能？** 先读本地能力目录 `skills/CATALOG.md`（由 `tools/scripts/build_catalog.py` 从各 `SKILL.md` frontmatter 自动生成，条目 = 已验证技能）：
+
+- **本地有，且用户只是想用** → 按需安装路径：给出条目 `install` 命令（如 `python tools/scripts/install_skill.py skills/<name>`），用户确认后执行，**无需进入创建流程**。
+- **本地有，但需改进** → 以本地版为基座，进入阶段 1。
+- **本地无** → 继续 0b。
+
+**0b. 上游是否已有同类技能？** 在本地索引中检索上游 agentic-awesome-skills：
 
 ```bash
 python skill-creator/scripts/search_index.py "<用户需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
@@ -188,11 +197,19 @@ python skill-creator/scripts/search_index.py --list-categories      # 列出全�
 - 索引文件 `indexes/upstream.db` 已随仓库提交，无需联网即可检索。
 - **索引落后于上游时**（上游有更新）：运行 `python skill-creator/scripts/build_index.py` 重建。
 - 检索结果给出：技能名/描述/路径/风险/分类/行数/目录结构标志（scripts/references/examples）。
-
-**决策分支：**
-- **有匹配候选** → 继续阶段 1-5 正常创建，然后在阶段 5.5 与候选对比择优。
-- **无匹配候选** → 跳过 5.5，直接照常创建安装。
 - 检索详情见 `references/skill-index.md`。
+
+**决策分支（本地 × 上游，5 场景）：**
+
+| 场景 | 本地 `skills/` | 上游索引 | 动作 |
+|---|---|---|---|
+| 1 | ✅ 有 | ✅ 有 | 两者对比取最优 → **最优的替换本地的** |
+| 2 | ✅ 有 | ❌ 无 | 直接用本地的（跳过上游对比） |
+| 3 | ❌ 无 | ✅ 有 | 创建后再与上游对比取最优 → **最优的放入 `skills/`** |
+| 4 | ❌ 无 | ❌ 无 | 创建 → 用创建的放入 `skills/` |
+| 5 | — | 上游更优 | 提炼学习点 → 记录到 `evolutions/` → 优化 skill-creator 方法论 |
+
+> 安装与回馈**永远以本地 `skills/` 为源**；上游只用于「对比择优」，不直接安装（验证优先）。对比见阶段 5.5。
 
 ### 阶段 1：捕捉工作与证据
 

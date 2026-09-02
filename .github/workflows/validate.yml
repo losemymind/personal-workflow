@@ -32,5 +32,8 @@ jobs:
       - name: Check doc path references
         run: python tools/scripts/check_docs_refs.py
 
+      - name: Check capability catalogs are in sync
+        run: python tools/scripts/build_catalog.py --check
+
       - name: Run tests
         run: python -m pytest tests/ -q
