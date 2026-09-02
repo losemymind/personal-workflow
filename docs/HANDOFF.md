@@ -2,7 +2,6 @@
 
 > 用途：新会话快速恢复上下文。读完本文件即可接手开发。
 > 生成日期：2026-09-02 ｜ 最近提交见 `git log --oneline -5`
-
 ## 1. 这是什么
 
 个人工作流工具库，跑通 **检索上游 → 创建 → 对比择优 → 验证 → 安装 → 回馈** 的完整闭环。支持四个 LLM 客户端：**claude / opencode / codex / deepseek-harness**。仓库远程：`https://github.com/losemymind/personal-workflow.git`（分支 `main`）。
@@ -26,7 +25,7 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 
 **核心原则**：先查后建（**先本地 `skills/CATALOG.md`/`agents/CATALOG.md`、后上游索引**）→ 引导不自动（AGENTS.md 只指引）→ 验证优先 → 回馈闭环（`evolutions/` 记录"上游更优"的学习点）。
 
-**按需安装**：`skills/CATALOG.md` 与 `agents/CATALOG.md` 由 `tools/scripts/build_catalog.py` 从各 frontmatter 自动生成（勿手改，CI `--check` 防漂移），是 LLM 读目录匹配需求 → 给出 `install` 命令的机器可读清单。上游库（aas/addy）只在 skill-creator 创建/对比流程使用，不是安装源。
+**按需安装**：`skills/CATALOG.md` 与 `agents/CATALOG.md` 由 `tools/scripts/build_catalog.py` 从各 frontmatter 自动生成（勿手改，CI `--check` 防漂移），是 LLM 读目录匹配需求 → 给出 `install` 命令的机器可读清单。**上游索引只服务两个生产器内部的"创建/对比择优"，不是安装源**——skill-creator 查技能索引（aas/addy），agent-creator 查代理索引（agency/ccgs/agency-zh）。
 
 > **职责分层**：skill-creator/agent-creator 是**可独立安装的技能**（与上层编排无耦合，自身闭环完整）；"是否调用生成器"与"本地候选 A vs 生成 B 谁优用谁"均由**根 AGENTS（总编排）**判定——编排逻辑只写在这一个文件，不写入生成器目录。
 
@@ -85,9 +84,15 @@ python tools/scripts/build_catalog.py --check
 # 检索上游（仅技能创建对比时）—— 默认全库，--source aas|addy 过滤
 python skill-creator/scripts/search_index.py "<关键词>" [--source addy] [--category X]
 
-# 索引：重建/增量
+# 检索上游代理（仅代理创建对比时）—— --source agency|ccgs|agency-zh，支持中文
+python agent-creator/scripts/search_agent_index.py "<关键词>" [--source agency-zh] [--category X]
+python agent-creator/scripts/search_agent_index.py --stats / --list-categories
+
+# 索引：重建/增量（技能 / 代理同构；代理为三源）
 python skill-creator/scripts/build_index.py [--source all|aas|addy] [--incremental]
 python skill-creator/scripts/build_index.py --source addy --from-extracted <本地仓库>
+python agent-creator/scripts/build_agent_index.py [--source all|agency|ccgs|agency-zh]
+python agent-creator/scripts/build_agent_index.py --source agency --from-extracted <本地仓库>
 
 # 创建/验证
 python skill-creator/scripts/create_skill.py --name x --category git --risk safe --no-interactive
@@ -113,24 +118,35 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 
 | 项 | 状态 |
 |---|---|
-| 双源索引（aas+addy，2132 技能） | ✅ 已重建入库 |
+| 技能双源索引（aas+addy，2132 技能） | ✅ 已重建入库 |
+| **代理三源索引（agency+ccgs+agency-zh，568 代理）** | ✅ 已入库（agent-creator/indexes/upstream.db，含中文 agency-zh） |
+| 中文检索（CJK LIKE 兜底） | ✅ search_index / search_agent_index 均支持中文关键词 |
 | 首个入库技能/代理（pr-summarizer / code-reviewer） | ✅ 已验证并安装到 opencode |
 | agent 生命周期（update/uninstall/rollback） | ✅ 已补齐（目录+单文件形态） |
 | CI（strict 验证 + pytest + 文档检查 + 目录同步） | ✅ 已配置 |
-| 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 生成器目录独立化（闭环 3 步，不含编排）+ 编排收敛到根 AGENTS（A vs B 谁优用谁） |
+| 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 生产器独立化（闭环 3 步，不含编排）+ 编排收敛到根 AGENTS（A vs B 谁优用谁） |
+| agent-creator evolutions | ✅ 已补（同构 skill-creator；暂无真实记录） |
 | 文档引用一致性检查器 | ✅ 零误报 |
 | **deepseek-harness 路径实测** | ⚠️ 未做（需真实环境；`DEEPSEEK_HARNESS_ROOT` 兜底） |
 | **opencode 真实安装待重启验证** | ⚠️ pr-summarizer/code-reviewer 已 install，需重启客户端确认加载 |
-| **上游索引更新频率** | 建议定期 `--incremental` 手动同步 |
+| **上游索引更新频率** | 建议定期用 `--source <单源>` 手动同步（技能/代理各自脚本） |
 | **新技能/代理持续沉淀** | 按需用本仓库流程创建后回馈到 skills/、agents/（重跑 build_catalog.py） |
 
 ## 6. 给新会话的开场提示
 
 接手时：
 1. 先 `git log --oneline -5` + `git status` 确认基线
-2. 用户需求落入哪一域（技能/代理/工具）→ 进对应 `AGENTS.md`（或直接读本文件 + 对应 `SKILL.md`）
-3. 改动文档时牢记**大小写敏感**，改完跑 `python tools/scripts/check_docs_refs.py` + `validate_skills.py --strict --dir skill-creator` + `pytest`
-4. 改 Python 脚本后跑 `pytest`（11 用例）防回归
+2. 用户需求先定域：**用现成能力** → 读 `skills/CATALOG.md`/`agents/CATALOG.md` 给 install 命令（不调生成器）；**创建/改进能力** → 编排在根 `AGENTS.md`：查本地候选 A → 调对应生成器产出 B（skill-creator 或 agent-creator，各自 `AGENTS.md`/`SKILL.md` 是独立技能引导）→ A vs B 谁优用谁
+3. 改动文档时牢记**大小写敏感**（目录小写 + `SKILL.md`/`AGENT.md`/`AGENTS.md` 大写）
+4. 改后防回归三件套全跑：
+   ```bash
+   python -m pytest tests/ -q                        # 22 用例
+   python tools/scripts/check_docs_refs.py           # md 引用大小写校验（exit 0）
+   python skill-creator/scripts/validate_skills.py --strict --dir skills
+   python skill-creator/scripts/validate_skills.py --strict --dir skill-creator
+   python agent-creator/scripts/validate_agents.py --strict --dir agents
+   python tools/scripts/build_catalog.py --check
+   ```
 5. 涉及副作用（安装/提交/推送）先向用户确认（引导不自动）
 
 ## 7. 参考
@@ -138,3 +154,5 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 - 开发计划：`docs/DEVELOPMENT-PLAN.md`（v1.0 目标 + 各阶段标记）
 - 生命周期：`tools/docs/lifecycle.md`
 - 索引/对比细节：`skill-creator/references/skill-index.md`、`skill-comparison.md`
+- 代理索引细节：`agent-creator/references/agent-index.md`
+- 按需安装方案：`docs/ON-DEMAND-INSTALL.md`

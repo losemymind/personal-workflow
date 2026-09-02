@@ -9,7 +9,7 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 | 部分 | 位置 | 职责 |
 |---|---|---|
 | 技能创建器 | `skill-creator/` | 创建/改进/验证/对比技能，维护上游索引 |
-| 代理创建器 | `agent-creator/` | 创建/改进/验证代理 |
+| 代理创建器 | `agent-creator/` | 创建/改进/验证代理，维护代理上游索引 |
 | 技能库 | `skills/` | 已验证可安装的技能（回馈目标；含自动生成的能力目录 `CATALOG.md`） |
 | 代理库 | `agents/` | 已验证可安装的代理（含自动生成的能力目录 `CATALOG.md`） |
 | 基础工具 | `tools/scripts/` | 四端安装器 + 能力目录生成器 + 生命周期管理（install/update/uninstall/rollback） |
@@ -65,8 +65,11 @@ python tools/scripts/rollback_agent.py <代理名>
 - `skill-creator/references/` — 规范参考（template/anatomy/quality-bar/index/comparison）
 - `skill-creator/examples/` — 6 个上游学习样本
 - `skill-creator/evolutions/` — 对比择优学习记录（反馈闭环）
+- `skill-creator/indexes/upstream.db` — 技能双源上游索引（随技能分发）
 - `agent-creator/SKILL.md` — 代理创建方法论（可独立安装；身份先于指令、最小权限、协作协议）
-- `agent-creator/references/` — 代理规范参考（template/anatomy/quality-bar）
+- `agent-creator/references/` — 代理规范参考（template/anatomy/quality-bar/index）
+- `agent-creator/indexes/upstream.db` — 代理三源上游索引（随技能分发）
+- `agent-creator/evolutions/` — 代理对比择优学习记录（反馈闭环）
 - `skills/CATALOG.md` / `agents/CATALOG.md` — 已验证能力目录（自动生成）
 - `tools/scripts/build_catalog.py` — 能力目录生成器
 - `tools/docs/lifecycle.md` — 生命周期操作详解
