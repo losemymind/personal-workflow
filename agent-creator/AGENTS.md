@@ -42,11 +42,23 @@ python agent-creator/scripts/validate_agents.py [--strict] [--dir <代理目录>
 
 检查项：frontmatter / `name` 一致 /「职责范围」含必须做+拒绝做 / 工具权限声明 / 协作协议含升级路径 / 引用不悬空。失败必须修复后再继续。
 
-### 4. 真实场景测试
+### 4. 与上游候选对比择优（有候选时）
+
+若阶段 0 在 `indexes/upstream.db` 检索到匹配代理，将自建代理与上游候选结构化对比（质量 6 维 + 结构 4 维）：
+
+```bash
+python agent-creator/scripts/compare_agents.py <自建目录> <上游候选目录>        # 单个
+python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --all-candidates   # 全部候选
+```
+
+- **上游更优** → 采纳上游；提炼学习点记入 `evolutions/`，反哺优化本技能方法论（反馈闭环）。
+- **自建更优或持平** → 用自建版本。
+
+### 5. 真实场景测试
 
 按 `SKILL.md` 阶段 6：构造 2-3 个该代理会被调用的真实场景，实际跑一次：验证身份表述、边界执行（拒绝该拒绝的）、权限遵守、汇报格式。根据结果迭代 AGENT.md。
 
-### 5. 安装到客户端
+### 6. 安装到客户端
 
 ```bash
 python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>] <代理目录>
@@ -54,7 +66,7 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 
 安装后重启客户端生效；生命周期（更新/卸载/回滚）见 `tools/docs/lifecycle.md`。
 
-### 6. 回馈稳定代理
+### 7. 回馈稳定代理
 
 代理稳定后：完善元数据（source/version/tags/tools_clients）→ 归档到代理库/可分发目录 → 含测试记录一并沉淀。
 
@@ -65,7 +77,7 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 - 在本技能随附的仓库内运行：`agent-creator/references/xxx.md`、`agent-creator/scripts/xxx.py`。
 - 安装到客户端后：以实际技能目录为准（如 `~/.config/opencode/skills/agent-creator/...`）。
 
-读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，结构规范读 `references/agent-anatomy.md`，质量标准读 `references/agent-quality-bar.md`。
+读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，结构规范读 `references/agent-anatomy.md`，质量标准读 `references/agent-quality-bar.md`，索引检索/更新读 `references/agent-index.md`，对比择优读 `references/agent-comparison.md`。
 
 ## 资源导览（按需读取）
 
@@ -76,6 +88,7 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 | `references/agent-anatomy.md` | 需要结构规范/技能代理取舍时 |
 | `references/agent-quality-bar.md` | 需要质量标准/验证器检查项时 |
 | `references/agent-index.md` | 需要检索上游/索引构建更新时 |
+| `references/agent-comparison.md` | 进行对比择优（阶段 4，质量 6 维 + 结构 4 维）时 |
 | `templates/AGENT.template.md` | 骨架模板（脚手架可自动生成） |
 | `indexes/upstream.db` | 检索上游代理（已随技能分发，克隆即得） |
 | `evolutions/` | 记录"上游更优"对比结论（反馈闭环） |

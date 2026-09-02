@@ -255,7 +255,15 @@ python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验�
 
 说明：默认扫描 `<repo>/skills/`（正式技能库）；校验本技能自身或新技能草稿时需 `--dir skill-creator` 或 `--dir <新技能目录>`。
 
-验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。\n\n技能正文稳定后，可运行触发测试（`templates/evals.json.template` 为模板）：\n\n```bash\npython skill-creator/scripts/run_trigger_tests.py <技能目录> --evals <技能目录>/evals.json\n```\n\n给出触发准确性/精确率/召回率的启发式信号（实际触发行为仍需真实客户端运行确认）。
+验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
+
+技能正文稳定后，可运行触发测试（`templates/evals.json.template` 为模板）：
+
+```bash
+python skill-creator/scripts/run_trigger_tests.py <技能目录> --evals <技能目录>/evals.json
+```
+
+给出触发准确性/精确率/召回率的启发式信号（实际触发行为仍需真实客户端运行确认）。
 
 ### 阶段 5.5：与上游候选对比择优
 

@@ -10,9 +10,10 @@ agent-creator/
   AGENTS.md                        # 独立技能引导（何时使用/工作流/资源导览；可独立安装）
   SKILL.md                         # 核心：创建/改进/验证/安装代理的方法论（身份先于指令、最小权限、协作协议）
   scripts/
-    create_agent.py                # 交互式脚手架生成器
-    validate_agents.py             # 自动验证器（frontmatter/边界/权限/协作/链接）
-    search_agent_index.py          # 检索上游代理索引（FTS5/CJK/分类过滤）
+    create_agent.py                 # 交互式脚手架生成器
+    validate_agents.py              # 自动验证器（frontmatter/边界/权限/协作/链接）
+    compare_agents.py               # 自建 vs 上游候选对比择优（质量6维+结构4维）
+    search_agent_index.py           # 检索上游代理索引（FTS5/CJK/分类过滤）
     build_agent_index.py           # 构建上游代理索引（三源：agency/ccgs/agency-zh）
     _project_paths.py              # 仓库根定位辅助
   indexes/
@@ -20,8 +21,9 @@ agent-creator/
   references/
     agent-template.md              # 代理模板：字段与四端兼容矩阵
     agent-anatomy.md               # 代理解剖：结构与技能/代理取舍
-    agent-quality-bar.md           # 质量标准（5 项质量检查）
-    agent-index.md                 # 上游代理索引：构建/检索/更新说明
+    agent-quality-bar.md            # 质量标准（5 项质量检查）
+    agent-index.md                  # 上游代理索引：构建/检索/更新说明
+    agent-comparison.md             # 对比择优：质量6维+结构4维评分维度
   templates/
     AGENT.template.md              # 新代理骨架
   evolutions/                      # 对比择优学习记录（反馈闭环）

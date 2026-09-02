@@ -60,10 +60,10 @@ tools: [claude, opencode, codex, deepseek]
 
 本技能内部所有资源引用（`references/`、`scripts/`、`templates/`、`indexes/upstream.db`、`evolutions/`）均以**技能目录本身**为基准，而非当前工作目录：
 
-- **在本仓库内运行**：真实路径为 `agent-creator/references/xxx.md`、`agent-creator/scripts/xxx.py`、`agent-creator/templates/AGENT.template.md`、`agent-creator/indexes/upstream.db`。
+- **在本仓库内运行**：真实路径为 `agent-creator/references/xxx.md`、`agent-creator/scripts/xxx.py`、`agent-creator/templates/AGENT.template.md`、`agent-creator/indexes/upstream.db`、`agent-creator/evolutions/xxx.md`。
 - **安装到客户端后**：真实路径为客户端技能目录（如 `~/.config/opencode/skills/agent-creator/...`），以实际安装位置为准。
 
-读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，需要结构规范时读 `references/agent-anatomy.md`，需要质量标准时读 `references/agent-quality-bar.md`，需要检索上游/索引细节时读 `references/agent-index.md`。
+读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，需要结构规范时读 `references/agent-anatomy.md`，需要质量标准时读 `references/agent-quality-bar.md`，需要检索上游/索引细节时读 `references/agent-index.md`，进行对比择优时读 `references/agent-comparison.md`。
 
 ## 代理文件解剖（Anatomy）
 
@@ -145,7 +145,7 @@ python agent-creator/scripts/search_agent_index.py --list-categories     # 分�
 - 索引落后于上游时运行 `python agent-creator/scripts/build_agent_index.py` 重建。
 
 **决策分支：**
-- **有匹配候选** → 记录候选；照常创建（阶段 1-4），随后与候选对比择优取最优。
+- **有匹配候选** → 记录候选；照常创建（阶段 1-4），随后在阶段 5.5 与候选对比择优取最优。
 - **无匹配候选** → 用自建版本。
 - 若上游更优被采纳 → 提炼学习点记录到 `evolutions/`，反哺优化本技能。
 
@@ -183,6 +183,27 @@ python agent-creator/scripts/validate_agents.py [--dir <agents目录>] [--strict
 ```
 
 验证器检查：frontmatter 有效性（YAML、`name` 格式、`description` 存在且 ≤300 字符、可选 `version` semver）、「职责边界」章节、工具/权限声明、正文非空、引用不悬空。offensive 类代理（渗透等）同样要求授权声明。
+
+### 阶段 5.5：与上游候选对比择优
+
+若阶段 0 检索到匹配候选，将自建代理与上游候选进行结构化对比（使用 `compare_agents.py`，实现 **质量 6 维 + 结构 4 维** 评分）：
+
+```bash
+# 对比单个代理
+python agent-creator/scripts/compare_agents.py <自建目录> <上游候选目录>
+
+# 对比某上游目录下的全部候选
+python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --all-candidates
+```
+
+评分维度（详见 `references/agent-comparison.md`）：
+- **质量 6 维**（权重 60%）：边界清晰度 / 必须做-拒绝做 / 权限声明 / 协作与升级 / 完成标准 / 元数据完整
+- **结构 4 维**（权重 40%）：渐进式披露 / 资源组织 / 单一职责 / 正文行数控制
+
+**决策：**
+- **上游更优** → 分析上游优势维度，提炼学习点，改进 agent-creator 方法论（记录到 `evolutions/`，形成反馈闭环）；必要时直接采纳上游代理。
+- **自建更优或持平** → 采纳自建版本，继续阶段 6。
+- 对比报告保存至 `evolutions/<日期>-compare-<代理名>.md`。
 
 ### 阶段 6：测试与迭代
 
