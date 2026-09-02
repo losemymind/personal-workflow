@@ -3,8 +3,9 @@
 Part of the skill-creator skill (see skill-creator/SKILL.md).
 Adapted from agentic-awesome-skills' tools/scripts/validate_skills.py.
 Checks frontmatter schema, content triggers/examples/limitations,
-security guardrails and dangling local links. Supports both English
-and Chinese section headers.
+security guardrails, dangling local links, and backtick resource
+references (`references/x.md`, `scripts/x.py`, `templates/x`).
+Supports both English and Chinese section headers.
 
 Usage:
     python skill-creator/scripts/validate_skills.py [--dir <skills_dir>] [--strict]
@@ -23,6 +24,8 @@ from datetime import date, datetime
 import yaml
 
 from _project_paths import find_repo_root, find_skills_dir
+
+REPO_ROOT = find_repo_root(__file__)
 
 
 def configure_utf8_output() -> None:
@@ -238,7 +241,7 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
             if not any(p.search(content) for p in OFFENSIVE_CONFIRMATION_PATTERNS):
                 errors.append(f"🚨 {rel_path}: OFFENSIVE SKILL MISSING THE MANDATORY PER-ACTION CONFIRMATION GATE")
 
-        # 5. Dangling links
+# 5. Dangling links (markdown links)
         links = re.findall(r"\[[^\]]*\]\(([^)]+)\)", content)
         for link in links:
             link_clean = link.split("#")[0].strip()
@@ -249,6 +252,36 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
             target_path = os.path.normpath(os.path.join(root, link_clean))
             if not os.path.exists(target_path):
                 errors.append(f"❌ {rel_path}: Dangling link detected. Path '{link_clean}' does not exist locally.")
+
+        # 5b. Backtick path references (`references/xxx.md`, `scripts/xxx.py`, `templates/xxx`)
+        # These are the convention used by progressive-disclosure skills (SKILL.md points to
+        # on-disk resources with backticks, not markdown links). Keep them resolvable.
+        backtick_refs = set(
+            m
+            for m in re.findall(r"`([^`\s]+\.(?:md|py|sh|json|yaml|yml|ts|js))`", content)
+            if not m.startswith("http") and "/" in m
+        )
+        for ref in sorted(backtick_refs):
+            ref_clean = ref.split("#")[0].strip()
+            # Skip placeholders/globs (e.g. <name>, **/SKILL.md, xxx.md, ~/...)
+            if (
+                not ref_clean
+                or ref_clean.startswith("~/")
+                or any(ch in ref_clean for ch in ("<", ">", "*", "?", "…"))
+                or "xxx" in ref_clean
+                or "your-skill-name" in ref_clean
+            ):
+                continue
+            if os.path.isabs(ref_clean):
+                continue
+            # Resolve relative to the skill dir first, then fall back to the repo root
+            # (covers both `references/x.md` and `skill-creator/references/x.md` forms)
+            targets = [
+                os.path.normpath(os.path.join(root, ref_clean)),
+                os.path.normpath(os.path.join(REPO_ROOT, ref_clean)),
+            ]
+            if not any(os.path.exists(t) for t in targets):
+                errors.append(f"❌ {rel_path}: Backtick reference '{ref_clean}' does not exist locally.")
 
     return {
         "skill_count": skill_count,

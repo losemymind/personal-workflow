@@ -39,6 +39,15 @@ skill-creator/
 - 需要把一个技能安装到 claude / opencode / codex / deepseek 等客户端的 skills 目录
 - 需要为技能编写测试用例、评估触发准确性、或运行自动验证
 
+## 资源路径基准
+
+本技能内部所有资源引用（`references/`、`scripts/`、`templates/`、`examples/`）均以**技能目录本身**为基准，而非当前工作目录：
+
+- **在本仓库内运行**：真实路径为 `skill-creator/references/xxx.md`、`skill-creator/scripts/validate_skills.py`、`skill-creator/templates/SKILL.template.md`。
+- **安装到客户端后**：真实路径为客户端技能目录（如 `~/.config/opencode/skills/skill-creator/references/xxx.md`、`~/.claude/skills/skill-creator/...`、`~/.codex/skills/skill-creator/...`），以实际安装位置为准。
+
+读取规则：references 文档**按需读取**（渐进式披露），需要字段/分类细节时读 `references/skill-template.md`，需要结构规范时读 `references/skill-anatomy.md`，需要质量标准时读 `references/quality-bar.md`；不要一次性全部注入。
+
 ## 核心理念
 
 ### 证据驱动，而非规格驱动
