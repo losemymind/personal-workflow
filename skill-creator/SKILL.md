@@ -22,11 +22,18 @@ tools: [claude, opencode, codex, deepseek]
 skill-creator/
 ├── SKILL.md                    ← 本方法论
 ├── scripts/
+│   ├── build_index.py          ← 构建上游技能索引（tarball→SQLite）
+│   ├── search_index.py         ← 检索上游索引（FTS5 全文/分类/风险）
+│   ├── compare_skills.py       ← 自建 vs 上游对比评分（质量6维+结构4维）
 │   └── validate_skills.py      ← 自动验证器（frontmatter/章节/安全/链接）
+├── indexes/
+│   └── upstream.db             ← SQLite 索引（官方 skills_index.json + 结构扫描）
 ├── references/
 │   ├── skill-template.md       ← 字段与分类完整参考
 │   ├── skill-anatomy.md        ← 结构解剖与渐进式披露
-│   └── quality-bar.md          ← 6 项质量检查与验证标准
+│   ├── quality-bar.md          ← 6 项质量检查与验证标准
+│   ├── skill-index.md          ← 索引构建/检索/更新说明
+│   └── skill-comparison.md     ← 对比评分维度与择优流程
 ├── examples/                   ← 上游学习样本（MIT 许可，验证豁免）
 │   ├── brainstorming/          ← 单文件·结构教科书
 │   ├── copywriting/            ← 单文件·流程门控
@@ -34,6 +41,7 @@ skill-creator/
 │   ├── systematic-debugging/   ← 单文件+references·阶段强制序
 │   ├── react-best-practices/   ← 多文件·渐进式披露范本（AGENTS.md+rules/）
 │   └── loki-mode/              ← 综合·复杂工作流范本（references/ 大拆分）
+├── evolutions/                 ← 对比学习记录（反馈闭环）
 └── templates/
     └── SKILL.template.md       ← 新技能骨架
 ```
@@ -166,6 +174,25 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 
 ## 创建流程（核心工作流）
 
+### 阶段 0：检索上游技能库（先查后建）
+
+动手创建前，**先在本地索引中检索上游 agentic-awesome-skills 是否已有可用技能**（避免重复造轮子，是 skill-creator 的第一个决策门）：
+
+```bash
+python skill-creator/scripts/search_index.py "<用户需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
+python skill-creator/scripts/search_index.py --stats                # 查看索引状态
+python skill-creator/scripts/search_index.py --list-categories      # 列出全部分类
+```
+
+- 索引文件 `indexes/upstream.db` 已随仓库提交，无需联网即可检索。
+- **索引落后于上游时**（上游有更新）：运行 `python skill-creator/scripts/build_index.py` 重建。
+- 检索结果给出：技能名/描述/路径/风险/分类/行数/目录结构标志（scripts/references/examples）。
+
+**决策分支：**
+- **有匹配候选** → 继续阶段 1-5 正常创建，然后在阶段 5.5 与候选对比择优。
+- **无匹配候选** → 跳过 5.5，直接照常创建安装。
+- 检索详情见 `references/skill-index.md`。
+
 ### 阶段 1：捕捉工作与证据
 
 让用户描述**他们实际做的工作**，并贴出真实产出作为证据。优先从当前对话提取（工具、步骤、纠正过的错误、输入输出格式）。
@@ -214,6 +241,27 @@ python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验�
 ```
 
 验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
+
+### 阶段 5.5：与上游候选对比择优
+
+若阶段 0 检索到匹配候选，将自建技能与上游候选进行结构化对比（使用 `compare_skills.py`，实现 **质量 6 维 + 结构 4 维** 评分）：
+
+```bash
+# 对比单个技能目录
+python skill-creator/scripts/compare_skills.py <自建目录> <上游候选目录>
+
+# 对比某上下游候选目录下的全部技能
+python skill-creator/scripts/compare_skills.py <自建目录> <上游目录> --all-candidates
+```
+
+评分维度（详见 `references/skill-comparison.md`）：
+- **质量 6 维**（权重 60%）：触发清晰度 / 示例可得性 / 限制声明 / 风险声明 / 安全护栏 / 元数据完整
+- **结构 4 维**（权重 40%）：渐进式披露 / 资源组织 / 脚本复用 / 正文行数控制
+
+**决策：**
+- **上游更优** → 分析上游优势维度，提炼学习点，改进 skill-creator 方法论（记录到 `evolutions/`，形成反馈闭环）；必要时直接采纳上游技能。
+- **自建更优或持平** → 采纳自建版本，继续阶段 6。
+- 对比报告保存至 `evolutions/<日期>-compare-<技能名>.md`。
 
 ### 阶段 6：测试与迭代
 
