@@ -7,6 +7,7 @@
 ```
 agent-creator/
   README.md                        # 说明
+  AGENTS.md                        # 独立技能引导（何时使用/工作流/资源导览；可独立安装）
   SKILL.md                         # 核心：创建/改进/验证/安装代理的方法论（身份先于指令、最小权限、协作协议）
   scripts/
     create_agent.py                # 交互式脚手架生成器

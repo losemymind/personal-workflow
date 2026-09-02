@@ -136,8 +136,6 @@ manifest 记账 · 重启客户端生效
 - validate_skills.py：只扫 SKILL.md，天然忽略 CATALOG.md，无需改。
 - check_docs_refs.py：CATALOG 条目内的反引号引用（skills/ 下真实目录、安装命令首 token）均指向已跟踪真实路径，应零误报；新增真实回馈后保持与 git 索引一致即可。
 
-### 6.3 与 skill-creator 创建决策流（一并补齐方法论）
-
 ### 6.3 与 skill-creator 创建决策流（职责分层）
 
 用户说"要一个做 X 的技能"时，**职责分层**为两层（已落成）：生成器本体与上层编排。
@@ -148,19 +146,17 @@ manifest 记账 · 重启客户端生效
 2. 检索上游，有候选 → 对比取最优；无候选 → 用自建版本。
 3. 上游更优 → 记入 `skill-creator/evolutions/`（agent 用同构记录）→ 提炼学习点反哺生成器方法论。
 
-**上层编排（本仓库根 AGENTS.md / 领域 AGENTS.md）**：决定是否调用生成器，并负责本地现有候选的取舍：
+**上层编排（仅本仓库根 AGENTS.md）**：决定是否调用生成器，并负责本地现有候选的取舍：
 
 1. 只"用现成能力"→ 按需安装（读 CATALOG 给 install 命令），**不调用生成器**。
 2. "创建/改进能力"→ 先读 skills/CATALOG.md（或 agents/CATALOG.md）取「现有候选 A」→ **无论有无都调用生成器**产出「自建/上游最优 B」→ 对比 A 与 B **谁优用谁**（放入 skills/、agents/ 供验证/安装/回馈）。
 
-> 安装侧只认 skills/、agents/（结果归属地），上游库永不出现在安装命令里——与 §1 边界一致。生成器自身不依赖本地 skills/ 库（独立安装到目标项目时无此库）。
+> 安装侧只认 skills/、agents/（结果归属地），上游库永不出现在安装命令里——与 §1 边界一致。生成器自身不依赖本地 skills/ 库（独立安装到目标项目时无此库），其 AGENTS.md/SKILL.md **不含任何上层编排描述**——只自述自身创建/对比/验证/安装闭环。
 
-### 6.4 入口引导更新（各 AGENTS.md）
+### 6.4 引导更新（已落成）
 
-- 根 AGENTS.md「标准工作流」：上层判定——"用现成"→ 读对应 CATALOG.md 匹配 install（不调生成器）；"创建/改进"→ 查本地候选 + 必调生成器 + A vs B 取优。
-- skill-creator/AGENTS.md：按需安装路径 + 查本地候选（步骤 1）→ 调用生成器（步骤 2：创建/上游对比）→ 与本地对比取优（步骤 3）。
-- agent-creator/AGENTS.md：同构（读 agents/CATALOG.md）。
-- skill-creator/agent-creator 的 SKILL.md：内部闭环 3 步 + "是否被调用由上层决定"注记。
+- 根 AGENTS.md「标准工作流」：编排层——"用现成"→ 读对应 CATALOG.md 匹配 install（不调生成器）；"创建/改进"→ 查本地候选 A + 必调生成器产出 B + A vs B 取优。
+- skill-creator/agent-creator 的 AGENTS.md / SKILL.md：**纯独立引导**——各自描述自身闭环（创建 → 检索上游对比 → 上游更优反哺自身 → 验证/测试/安装），不出现"上层/根 AGENTS/CATALOG 本地候选/A vs B"等编排概念。
 - 全部为**指引型**（描述路径 + 引用命令，不自动执行安装）。
 
 ### 6.5 可选"批量推荐"（V1 不做，预留）
@@ -174,8 +170,8 @@ manifest 记账 · 重启客户端生效
 | W1 | build_catalog.py（生成 + --check） | tools/scripts/ | 对当前库生成两文件；重复执行幂等；`--check` 通过 |
 | W2 | CATALOG.md 初版入库 | skills/CATALOG.md、agents/CATALOG.md | 与现状各 1 条目精确对应；通过 §8 三件套 |
 | W3 | validate_agents.py 排除名单加 `catalog.md` | agent-creator/scripts/validate_agents.py | agents/ 库 strict 通过且 CATALOG.md 不被当代理 |
-| W4 | 生成器内部闭环 + 上层编排补入方法论 | skill-creator/agent-creator 的 SKILL.md + AGENTS.md | 生成器含 3 步闭环（创建→上游对比→上游更优反哺）；上层含"查本地候选→必调生成→A vs B 取优" |
-| W5 | 按需安装入口更新三处 AGENTS.md | 根 + skill-creator/ + agent-creator/ | 用户可按指引让 LLM 读目录给出安装命令 |
+| W4 | 生成器独立闭环 + 编排收敛 | skill-creator/agent-creator 的 SKILL.md + AGENTS.md（独立化）；根 AGENTS.md（编排） | 生成器目录只含 3 步闭环（创建→上游对比→反哺），无上层描述；编排（查本地候选→必调生成→A vs B）只在根 AGENTS |
+| W5 | 按需安装入口更新 | 根 AGENTS.md | 用户可按指引让 LLM 读目录给出安装命令 |
 | W6 | 补测试 | tests/ | CATALOG 生成/校验单测 + validate_agents 排除单测 |
 | W7 | 端到端手测 | 本仓库 | 模拟需求 → LLM 读目录命中 → dry-run 安装 → manifest 正确 |
 

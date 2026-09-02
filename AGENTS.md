@@ -19,8 +19,8 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 | 任务类型 | 进入入口 | 说明 |
 |---|---|---|
 | **按需安装**已有技能/代理（用现成能力，不创建） | 读 `skills/CATALOG.md` / `agents/CATALOG.md` | 让 LLM 读能力目录匹配需求 → 命中即给 install 命令，确认后执行 |
-| 创建/改进/**技能** | `skill-creator/AGENTS.md` | 技能领域入口（查本地候选→调生成器→与本地对比取优） |
-| 创建/改进/**代理** | `agent-creator/AGENTS.md` | 代理领域入口（查本地候选→调生成器→与本地对比取优） |
+| 创建/改进/**技能** | 本层流程（下方）；生成器 = `skill-creator`（独立技能，引导见 `skill-creator/AGENTS.md`，方法论 `skill-creator/SKILL.md`） | 本层查本地候选 A → 调生成器产出 B → 对比 A/B 取优 |
+| 创建/改进/**代理** | 本层流程（下方）；生成器 = `agent-creator`（独立技能，引导见 `agent-creator/AGENTS.md`，方法论 `agent-creator/SKILL.md`） | 同技能，入口换 `agent-creator/` |
 | 安装/生命周期（通用） | `tools/docs/lifecycle.md` | 安装/升级/卸载/回滚命令 |
 | 其他/不确定 | 继续读本文件 | 总编排兜底 |
 
@@ -35,15 +35,15 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 - 用户只是**用现成能力**（不创建）→ 走「按需安装」：读对应 `CATALOG.md`，命中即给 install 命令，确认后安装，**不调用生成器**。
 - 用户要**创建/改进能力** → 走「创建」路径（下方），**无论本地是否已有，都调用生成器生成**，再与本地现有对比**谁优用谁**。
 
+> skill-creator/agent-creator 是**可独立安装的技能**（不与本仓库耦合，自身含完整工作流，见各自 AGENTS.md）。本仓库只把它们当作生产器调用：查本地 → 调生成 → 对比取优在**本层完成**，不写入生成器内部。
+
 ### 创建/改进技能或代理（总览）
 
-以技能为例（代理同构，入口换 `agent-creator/AGENTS.md`）：
+以技能为例（代理同构，生成器换 `agent-creator`）：
 
 1. **查本地现有候选**（先查后建）：读 `skills/CATALOG.md`，命中即记作「现有候选 A」（有则可用，无则空）。
-2. **调用 skill-creator 生成**（细节见 `skill-creator/AGENTS.md`）：生成器内部 = **按需求创建 → 检索上游对比 → 产出「自建/上游」最优 B**（上游更优则记录 `evolutions/` 优化生成器）。
+2. **调用生成器产出 B**：把需求交给 skill-creator 执行其内部闭环（按需求创建 → 检索上游对比 → 产出「自建/上游」最优 B，上游更优则记录 `evolutions/` 优化生成器）。命令按 `skill-creator/AGENTS.md` / `SKILL.md` 执行。
 3. **对比 A 与 B** → **谁优用谁**（最优放入 `skills/<name>/`，供验证/安装/回馈）。
-
-具体命令（检索上游 / 脚手架 / 对比 / 验证 / 安装）见对应领域入口文件与 `skill-creator/SKILL.md`、`agent-creator/SKILL.md`。
 
 ## 生命周期操作（维护）
 

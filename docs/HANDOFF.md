@@ -7,12 +7,14 @@
 
 个人工作流工具库，跑通 **检索上游 → 创建 → 对比择优 → 验证 → 安装 → 回馈** 的完整闭环。支持四个 LLM 客户端：**claude / opencode / codex / deepseek-harness**。仓库远程：`https://github.com/losemymind/personal-workflow.git`（分支 `main`）。
 
-## 2. 顶层架构（总编排 → 领域入口）
+## 2. 顶层架构（总编排 → 独立生产器）
 
 ```
-AGENTS.md                 # 总编排/分发入口：先定领域再分流
-├── skill-creator/AGENTS.md   # 技能领域入口（含 SKILL.md 方法论 + AGENTS.md 指引）
-├── agent-creator/AGENTS.md   # 代理领域入口（含 SKILL.md 方法论 + AGENTS.md 指引）
+AGENTS.md                 # 总编排/分发入口：判定需求→按需安装 或 调用生产器→谁优用谁
+├── skill-creator/            # 独立技能「技能生产器」（自含 AGENTS.md 引导 + SKILL.md 方法论）
+│   └── AGENTS.md / SKILL.md  #   闭环：创建 → 检索上游对比 → 上游更优反哺自身（不含上层编排）
+├── agent-creator/            # 独立技能「代理生产器」（同构，闭环：创建→验证→测试→安装）
+│   └── AGENTS.md / SKILL.md
 ├── tools/docs/lifecycle.md   # 安装/生命周期通用入口
 ├── skills/               # 已验证技能库（回馈目标；现有 pr-summarizer）
 ├── agents/               # 已验证代理库（回馈目标；现有 code-reviewer）
@@ -25,6 +27,8 @@ AGENTS.md                 # 总编排/分发入口：先定领域再分流
 **核心原则**：先查后建（**先本地 `skills/CATALOG.md`/`agents/CATALOG.md`、后上游索引**）→ 引导不自动（AGENTS.md 只指引）→ 验证优先 → 回馈闭环（`evolutions/` 记录"上游更优"的学习点）。
 
 **按需安装**：`skills/CATALOG.md` 与 `agents/CATALOG.md` 由 `tools/scripts/build_catalog.py` 从各 frontmatter 自动生成（勿手改，CI `--check` 防漂移），是 LLM 读目录匹配需求 → 给出 `install` 命令的机器可读清单。上游库（aas/addy）只在 skill-creator 创建/对比流程使用，不是安装源。
+
+> **职责分层**：skill-creator/agent-creator 是**可独立安装的技能**（与上层编排无耦合，自身闭环完整）；"是否调用生成器"与"本地候选 A vs 生成 B 谁优用谁"均由**根 AGENTS（总编排）**判定——编排逻辑只写在这一个文件，不写入生成器目录。
 
 ## 3. 已交付能力（按模块）
 
@@ -53,11 +57,11 @@ AGENTS.md                 # 总编排/分发入口：先定领域再分流
 
 ### 按需安装 + 创建决策（能力目录）
 - `skills/CATALOG.md` / `agents/CATALOG.md`：本地已验证能力清单（LLM 检索 → 命中给 install 命令 → 人类确认）
-- **职责分层**：skill-creator/agent-creator 是可独立安装的生产器，内部闭环 = 按需创建 → 检索上游对比 → 上游更优反哺自身（`evolutions/`）；**是否调用生成器由根 AGENTS 判定**，上层流程 = 查本地候选 A → 无论有无都调生成器产出 B → A vs B 谁优用谁（根 + 三处 AGENTS + 双 SKILL.md 已统一）
+- **职责分层**：skill-creator/agent-creator 是可独立安装的生产器（闭环 = 创建 → 检索上游对比 → 上游更优反哺自身 `evolutions/`，目录内不含上层编排）；**编排只在根 AGENTS**：查本地候选 A → 无论有无都调生成器产出 B → A vs B 谁优用谁
 - agent 字段 schema 与 skill 不同：agent 无 category/source/date_added，用 mode/tags 分类
 
 ### 文档质量
-- 根 `AGENTS.md` / `skill-creator/AGENTS.md` / `agent-creator/AGENTS.md` 分层入口
+- 根 `AGENTS.md` 为总编排；`skill-creator/AGENTS.md` / `agent-creator/AGENTS.md` 为各自独立技能引导（随技能分发）
 - 各 README 结构树与实际文件已对齐（曾全量核对过一轮）
 - 关键点：**文件名大小写敏感**（目录小写 + `SKILL.md`/`AGENT.md`/`AGENTS.md` 大写）——Windows 开发时易踩坑，克隆到 Linux 会断链，务必用 `git ls-files` 校验引用
 
@@ -108,7 +112,7 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | 首个入库技能/代理（pr-summarizer / code-reviewer） | ✅ 已验证并安装到 opencode |
 | agent 生命周期（update/uninstall/rollback） | ✅ 已补齐（目录+单文件形态） |
 | CI（strict 验证 + pytest + 文档检查 + 目录同步） | ✅ 已配置 |
-| 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 根/双领域 AGENTS + 双 SKILL.md 已统一分层（生成器闭环 3 步，上层判定是否调用） |
+| 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 生成器目录独立化（闭环 3 步，不含编排）+ 编排收敛到根 AGENTS（A vs B 谁优用谁） |
 | 文档引用一致性检查器 | ✅ 零误报 |
 | **deepseek-harness 路径实测** | ⚠️ 未做（需真实环境；`DEEPSEEK_HARNESS_ROOT` 兜底） |
 | **opencode 真实安装待重启验证** | ⚠️ pr-summarizer/code-reviewer 已 install，需重启客户端确认加载 |

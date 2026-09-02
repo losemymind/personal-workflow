@@ -28,7 +28,7 @@
 skill-creator/
   README.md                 # 说明
   SKILL.md                  # 核心：创建/改进/验证/安装技能的方法论（10 阶段工作流）
-  AGENTS.md                 # 技能领域入口（总编排 AGENTS.md 分流至此）
+  AGENTS.md                 # 独立技能引导（何时使用/工作流/资源导览；可独立安装）
   scripts/
     build_index.py          # 构建上游技能索引（tarball→SQLite，支持 --incremental）
     search_index.py         # 检索上游索引（FTS5 全文/分类/风险过滤）
