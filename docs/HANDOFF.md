@@ -47,8 +47,8 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
   - `agency` = msitarzewski/agency-agents（258，division 目录扫描）
   - `ccgs` = Donchitos/Claude-Code-Game-Studios（49，.claude/agents 扫描）
   - `agency-zh` = jnMetaCode/agency-agents-zh（261，中文版，含公司/法务/HR/供应链等 division）
-- 脚本：`search_agent_index.py`（检索/--source/stats/--list-categories，含 CJK LIKE 兜底）、`build_agent_index.py`（多源构建/--from-extracted）、`create_agent.py`（脚手架）、`validate_agents.py`（边界/权限/协作/链接校验）
-- `references/`：agent-template（四端兼容矩阵）/ agent-anatomy / agent-quality-bar / agent-index（索引说明）
+- 脚本：`search_agent_index.py`（检索/--source/stats/--list-categories，含 CJK LIKE 兜底）、`build_agent_index.py`（多源构建/--from-extracted）、`compare_agents.py`（自建 vs 上游对比，质量6维+结构4维，`--all-candidates`/`--json`）、`create_agent.py`（脚手架）、`validate_agents.py`（边界/权限/协作/链接校验）
+- `references/`：agent-template（四端兼容矩阵）/ agent-anatomy / agent-quality-bar / agent-index（索引说明）/ agent-comparison（对比择优评分维度，与 skill-comparison 同构）
 - `evolutions/`：对比学习记录（与 skill-creator 同构，模板见 README）
 
 ### tools（分发与生命周期）
@@ -100,8 +100,9 @@ python skill-creator/scripts/validate_skills.py --strict --dir skills/x
 python agent-creator/scripts/create_agent.py --name x --mode subagent --no-interactive
 python agent-creator/scripts/validate_agents.py --strict --dir agents/x
 
-# 对比择优（有上游候选时）
-python skill-creator/scripts/compare_skills.py <自建目录> <上游目录>
+ # 对比择优（有上游候选时）
+ python skill-creator/scripts/compare_skills.py <自建目录> <上游目录>
+ python agent-creator/scripts/compare_agents.py <自建目录> <上游目录>
 
 # 生命周期
 python tools/scripts/update_skill.py <名> --source <新版>   # 代理用 _agent 版同构
