@@ -40,7 +40,7 @@ PersonalWorkflow/
 │   │   ├── SKILL.template.md    ← [W4b] 加 version 字段
 │   │   └── evals.json.template  ← [W4c] 测试用例模板（NEW）
 │   └── examples/ references/ indexes/ evolutions/（现有）
-└── agent-creator/               ← 预留（后续工作）
+└── agent-creator/               ← [v1.1] 代理创建器（与 skill-creator 平行同构）
 ```
 
 ## 3. 工作分解与交付顺序

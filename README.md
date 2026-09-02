@@ -10,6 +10,7 @@ PersonalWorkflow 是个人工作流（技能/代理）的分发与回馈中心�
 |---|---|---|
 | 分发入口 | `AGENTS.md` | 引导 LLM 客户端按标准流程使用本仓库 |
 | 技能创建器 | `skill-creator/` | 创建/改进/验证/对比技能（含上游索引检索） |
+| 代理创建器 | `agent-creator/` | 创建/改进/验证代理（身份先于指令、最小权限） |
 | 技能库 | `skills/` | 已验证可安装的技能（回馈目标位置） |
 | 代理库 | `agents/` | 已验证可安装的代理 |
 | 基础工具 | `tools/scripts/` | 四端安装器与生命周期管理（install/update/uninstall/rollback） |

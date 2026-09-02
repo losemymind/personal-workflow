@@ -9,6 +9,7 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 | 部分 | 位置 | 职责 |
 |---|---|---|
 | 技能创建器 | `skill-creator/` | 创建/改进/验证/对比技能，维护上游索引 |
+| 代理创建器 | `agent-creator/` | 创建/改进/验证代理 |
 | 技能库 | `skills/` | 已验证可安装的技能（回馈目标） |
 | 代理库 | `agents/` | 已验证可安装的代理 |
 | 基础工具 | `tools/scripts/` | 四端安装器与生命周期管理（install/update/uninstall/rollback） |
@@ -35,12 +36,20 @@ python skill-creator/scripts/compare_skills.py <本地候选或新建> <上游�
 - 上游更优 → 建议采纳上游（记录到 `skill-creator/evolutions/`）
 - 自建更优 → 用自建版本
 
-### 3. 创建（无合适技能时）
+### 3. 创建（无合适技能/代理时）
 
 ```bash
-python skill-creator/scripts/create_skill.py          # 交互式脚手架
+# 创建技能（交互式脚手架 + 验证）
+python skill-creator/scripts/create_skill.py
 python skill-creator/scripts/validate_skills.py --strict --dir skills/<name>
+
+# 创建代理（交互式脚手架 + 验证）
+python agent-creator/scripts/create_agent.py
+python agent-creator/scripts/validate_agents.py --strict --dir agents/<name>
 ```
+
+- 技能 vs 代理取舍：可描述的步骤化流程 → 技能；需要常驻角色/权限/协作 → 代理。
+- 代理创建方法论见 `agent-creator/SKILL.md`（身份先于指令、最小权限、协作协议）。
 
 ### 4. 验证测试
 
@@ -54,6 +63,9 @@ python tools/scripts/install_skill.py --client <claude|opencode|codex|deepseek> 
 
 # 自动探测已安装客户端
 python tools/scripts/install_skill.py <技能目录>
+
+# 代理安装（同构）
+python tools/scripts/install_agent.py --client <claude|opencode|codex|deepseek> <代理目录>
 ```
 
 ### 6. 回馈仓库
@@ -74,6 +86,8 @@ python tools/scripts/rollback_skill.py <技能名>        # 回滚上一版本
 - `skill-creator/references/` — 规范参考（template/anatomy/quality-bar/index/comparison）
 - `skill-creator/examples/` — 6 个上游学习样本
 - `skill-creator/evolutions/` — 对比择优学习记录（反馈闭环）
+- `agent-creator/SKILL.md` — 代理创建方法论（身份先于指令、最小权限、协作协议）
+- `agent-creator/references/` — 代理规范参考（template/anatomy/quality-bar）
 - `tools/docs/lifecycle.md` — 生命周期操作详解
 
 ## 客户端接入方式

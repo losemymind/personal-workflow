@@ -22,7 +22,7 @@ agents/
 
 ## 与 agent-creator 的关系
 
-- 创建/改进代理 → 使用 `agent-creator/`（预留）
+- 创建/改进代理 → 使用 `agent-creator/`（方法论见 `agent-creator/SKILL.md`，脚手架 `create_agent.py`，验证器 `validate_agents.py`）
 - 从本目录安装代理到 LLM 客户端 → 使用 `tools/scripts/install_agent.py`
 
 ## 回馈流程
