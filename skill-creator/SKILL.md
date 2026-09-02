@@ -221,6 +221,8 @@ python skill-creator/scripts/search_index.py --list-categories      # 列出全�
 - 按「自由度匹配脆弱性」决定结构强度（见 `references/quality-bar.md` 与正文「核心理念」节）。
 - 从最小可行开始，先让技能「跑起来」，再按反馈扩展。
 - 使用 `templates/SKILL.template.md` 作为骨架；字段与分类完整参考见 `references/skill-template.md`。
+- 可一键生成骨架：`python skill-creator/scripts/create_skill.py --name <技能名> --category <分类> --risk <级别>`（交互式或 `--no-interactive`）。
+- frontmatter 应声明 `version: "0.1.0"`（语义化版本，生命周期管理依赖它记账）。
 
 ### 阶段 4：编写 SKILL.md
 
@@ -237,10 +239,12 @@ python skill-creator/scripts/search_index.py --list-categories      # 列出全�
 ```bash
 python skill-creator/scripts/validate_skills.py                # 标准模式（警告不阻断）
 python skill-creator/scripts/validate_skills.py --strict       # 严格模式（有警告即失败，适合 CI）
-python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验指定目录（默认本仓库技能目录）
+python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验指定目录
 ```
 
-验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
+说明：默认扫描 `<repo>/skills/`（正式技能库）；校验本技能自身或新技能草稿时需 `--dir skill-creator` 或 `--dir <新技能目录>`。
+
+验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。\n\n技能正文稳定后，可运行触发测试（`templates/evals.json.template` 为模板）：\n\n```bash\npython skill-creator/scripts/run_trigger_tests.py <技能目录> --evals <技能目录>/evals.json\n```\n\n给出触发准确性/精确率/召回率的启发式信号（实际触发行为仍需真实客户端运行确认）。
 
 ### 阶段 5.5：与上游候选对比择优
 
@@ -330,14 +334,30 @@ python skill-creator/scripts/compare_skills.py <自建目录> <上游目录> --a
 
 ## 多客户端安装指引
 
-技能本体是通用目录格式 `skills/<name>/SKILL.md`，安装方式因客户端而异。复制目录后需**重启客户端**才会生效。
+技能本体是通用目录格式 `skills/<name>/SKILL.md`。**推荐使用仓库自带安装器**（支持四端路径解析与 manifest 生命周期管理），安装后需**重启客户端**才会生效：
+
+```bash
+python tools/scripts/install_skill.py --client <claude|opencode|codex|deepseek> <技能目录>   # 指定客户端
+python tools/scripts/install_skill.py <技能目录>                                            # 自动探测已安装客户端
+python tools/scripts/install_skill.py <技能目录> --dry-run                                   # 只预览目标路径
+```
+
+各客户端实际路径（由 `tools/scripts/client_paths.py` 统一解析）：
 
 - **Claude Code**：`~/.claude/skills/<name>/`（用户级）；项目级放 `.claude/skills/<name>/`。技能触发依据是 `description`。
 - **OpenCode**：用户级 `~/.config/opencode/skills/<name>/SKILL.md`；项目级 `.opencode/skills/<name>/SKILL.md`；也可在 `opencode.json` 的 `skills.paths` 注册任意目录（loader 递归扫描 `**/SKILL.md`）。
 - **Codex（OpenAI）**：需要启用 experimental `skills` 特性；`name` ≤100 字符、`description` ≤500 字符单行；`~/.codex/skills/<name>/SKILL.md`，正文在 `/skills` 或 `$<skill-name>` 时才注入。
-- **DeepSeek Harness**：技能目录路径以当前版本官方文档为准（用户级通常位于该工具 config 目录下的 `skills/`，项目级约定视版本而定）；安装后重启并验证触发。
+- **DeepSeek Harness**：技能目录路径以当前版本官方文档为准（用户级通常位于该工具 config 目录下的 `skills/`，可设 `DEEPSEEK_HARNESS_ROOT` 覆盖）；安装后重启并验证触发。
 
 安装后验证：用一个真实小任务触发试运行，确认技能被正确加载、按指令执行。
+
+已安装技能的生命周期（升级/卸载/回滚）使用仓库工具管理，详见 `tools/docs/lifecycle.md`：
+
+```bash
+python tools/scripts/update_skill.py <技能名> --source <新版目录>
+python tools/scripts/uninstall_skill.py <技能名>
+python tools/scripts/rollback_skill.py <技能名>
+```
 
 ## 相关技能
 

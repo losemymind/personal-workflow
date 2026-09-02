@@ -4,6 +4,7 @@ description: "一句话说明技能做什么以及何时触发（≤200 字符�
 category: productivity
 risk: safe
 source: self
+version: "0.1.0"
 date_added: "YYYY-MM-DD"
 author: your-name-or-handle
 tags: [tag-one, tag-two]

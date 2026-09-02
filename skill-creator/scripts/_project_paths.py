@@ -24,7 +24,8 @@ def find_repo_root(source_file: str) -> Path:
 
 
 def find_skills_dir(source_file: str) -> Path:
-    """Return <repo-root>/skills if it exists, otherwise <repo-root>/skill-creator."""
+    """Return <repo-root>/skills (the formal skill library) if it exists,
+    otherwise <repo-root>/skill-creator (the skill factory)."""
     root = find_repo_root(source_file)
     candidates = [root / "skills", root / "skill-creator"]
     for candidate in candidates:

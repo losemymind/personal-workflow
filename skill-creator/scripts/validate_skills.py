@@ -83,6 +83,7 @@ SOURCE_REPO_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 VALID_SOURCE_TYPES = {"official", "community", "self"}
 VALID_RISK_LEVELS = ["none", "safe", "critical", "offensive", "unknown"]
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")  # YYYY-MM-DD
+VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")  # semver x.y.z
 
 SECURITY_DISCLAIMER_PATTERNS = [
     # English (exact, from agentic-awesome-skills)
@@ -230,6 +231,13 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
 
         if "category" not in metadata:
             advisories.append(f"ℹ️  {rel_path}: Missing 'category' field (recommended for personal-workflow skills)")
+
+        if "version" in metadata:
+            version = metadata["version"]
+            if not isinstance(version, str) or not VERSION_PATTERN.match(version):
+                errors.append(f"❌ {rel_path}: Invalid 'version' format. Must be semver x.y.z (e.g., '0.1.0'), got '{metadata['version']}'")
+        elif metadata.get("name") != "skill-creator":
+            advisories.append(f"ℹ️  {rel_path}: Missing 'version' field (recommended for lifecycle tracking)")
 
         # 3. Content checks (triggers)
         if not has_when_to_use_section(content):
