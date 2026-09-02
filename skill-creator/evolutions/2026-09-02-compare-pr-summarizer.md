@@ -3,7 +3,8 @@
 ## 基本信息
 - 日期：2026-09-02
 - 需求：从 git diff 生成结构化的 PR 总结，配审查清单与风险标注
-- 上游候选：`skills/comprehensive-review-pr-enhance`（83 行，2 文件，risk: critical）
+- 上游候选：上游仓库（`sickn33/agentic-awesome-skills`）的 `skills/comprehensive-review-pr-enhance`（83 行，2 文件，risk: critical）
+  - 注：`skills/...` 在此指上游仓库路径，非本仓库的 `skills/` 目录
 
 ## 对比分析
 

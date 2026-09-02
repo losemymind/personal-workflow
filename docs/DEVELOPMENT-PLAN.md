@@ -27,8 +27,11 @@ PersonalWorkflow/
 │   │   ├── install_skill.py     ← [W3b] 四端安装
 │   │   ├── install_agent.py     ← [W3b] 四端代理安装
 │   │   ├── update_skill.py      ← [W3c] 升级（保留旧版备份）
+│   │   ├── update_agent.py      ← [G1] 代理升级（保留旧版备份）
 │   │   ├── uninstall_skill.py   ← [W3c] 卸载
+│   │   ├── uninstall_agent.py   ← [G1] 代理卸载
 │   │   ├── rollback_skill.py    ← [W3c] 回滚到上一版本
+│   │   ├── rollback_agent.py    ← [G1] 代理回滚
 │   │   └── client_paths.py      ← [W3a] 四端路径矩阵（共享模块）
 ├── skill-creator/               ← （现有，工具化补全 W4）
 │   ├── SKILL.md
@@ -74,10 +77,10 @@ PersonalWorkflow/
 ### W5：文档整合
 - 根 README.md 更新为最终形态说明（安装流程、四端支持、目录导览）
 - skill-creator SKILL.md 增加阶段引用（安装器使用、version 规范）
-- 新增 references/skill-lifecycle.md（生命周期操作说明）
+- 新增 `tools/docs/lifecycle.md`（生命周期操作说明，实际落点；计划中 skill-creator 内 references 方案未采用）
 
 ### W6：端到端验证
-- 模拟：create_skill.py 生成测试技能 → 四端 install → update → rollback → uninstall 全链路
+- 模拟：create_skill.py / create_agent.py 生成测试产物 → install → update → rollback → uninstall 全链路（opencode 路径实测；claude/codex/deepseek 路径由 client_paths.py 矩阵保证，客户端实际安装待对应环境验证）
 - 回归：validate_skills.py --strict 通过
 
 ## 4. 版本与兼容约定

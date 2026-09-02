@@ -12,6 +12,7 @@
 - `description`：≤200 字符（验证器上限 300），清晰的价值主张 + 触发场景
 - `risk`：`none` / `safe` / `critical` / `offensive` / `unknown` 之一
 - `source`：来源归属（原创用 `self`）
+- `version`：`x.y.z` 语义化格式（推荐，生命周期记账；缺失仅提示）
 - `category` / `date_added`：推荐（验证器给出提示）
 
 ### 2. 清晰的触发条件（自动）
@@ -69,12 +70,14 @@ python skill-creator/scripts/validate_skills.py --strict
 - [x] `source` 存在（标准模式缺失仅警告）
 - [x] `source_repo` / `source_type` 格式正确（若提供）
 - [x] `date_added` 格式为 YYYY-MM-DD（缺失仅提示）
+- [x] `version` 格式为 x.y.z（缺失仅提示）
 - [x] 中英文「何时使用」章节存在
 - [x] 中英文「示例」章节存在
 - [x] 中英文「限制」章节存在
 - [x] offensive 技能的安全免责声明（中英均可）
 - [x] offensive 技能的强制用户确认门
-- [x] 本地链接无悬空
+- [x] markdown 链接无悬空
+- [x] 反引号路径引用（`references/x.md`、`scripts/x.py` 等）存在且可解析（代码块内的示例路径豁免）
 - [x] 跳过隐藏目录、符号链接与 `examples/`（上游学习样本豁免）
 
 ## 支持级别

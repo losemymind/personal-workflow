@@ -13,8 +13,11 @@ tools/
     ├── install_skill.py   # 安装技能到客户端
     ├── install_agent.py   # 安装代理到客户端
     ├── update_skill.py    # 升级技能（保留旧版本备份）
+    ├── update_agent.py    # 升级代理（保留旧版本备份）
     ├── uninstall_skill.py # 卸载技能
-    └── rollback_skill.py  # 回滚技能到上一版本
+    ├── uninstall_agent.py # 卸载代理
+    ├── rollback_skill.py  # 回滚技能到上一版本
+    └── rollback_agent.py  # 回滚代理到上一版本
 ```
 
 ## 设计约定

@@ -20,11 +20,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml pytest
 
-      - name: Validate skills (strict)
+      - name: Validate skills library (strict)
         run: python skill-creator/scripts/validate_skills.py --strict --dir skills
 
-      - name: Validate agent-creator methodology dir (own docs must not be scanned as agents)
+      - name: Validate skill-creator itself (meta-skill must stay green)
+        run: python skill-creator/scripts/validate_skills.py --strict --dir skill-creator
+
+      - name: Validate agents library (strict)
         run: python agent-creator/scripts/validate_agents.py --strict --dir agents
+
+      - name: Check doc path references
+        run: python tools/scripts/check_docs_refs.py
 
       - name: Run tests
         run: python -m pytest tests/ -q

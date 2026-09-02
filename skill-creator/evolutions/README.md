@@ -8,7 +8,7 @@
 
 ```
 <YYYY-MM-DD>-compare-<技能名>.md
-示例：2026-09-02-compare-create-epics.md
+示例：2026-09-02-compare-pr-summarizer.md（真实记录）
 ```
 
 ### 记录内容模板
