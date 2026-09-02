@@ -14,6 +14,7 @@ Heuristics:
 Usage: python tools/scripts/check_docs_refs.py
 """
 
+import os
 import re
 import subprocess
 import sys
@@ -78,12 +79,22 @@ def main() -> int:
             token = extract_path_token(cand)
             if "." in token and "/" not in token:
                 continue  # config key like `skills.paths`, not a repo path
-            if not any(d in token for d in KNOWN_DIRS):
-                continue  # not repo-internal
+            # token must START with a known repo dir (prefix match, not substring)
+            if not any(token.startswith(d + "/") or token == d for d in KNOWN_DIRS):
+                continue  # not repo-internal (client paths, field names, etc.)
+            # evolutions/ records reference UPSTREAM repo paths (e.g. `skills/comprehensive-review-*`
+            # inside sickn33's catalog). They are intentionally not local — do not flag them.
+            if "evolutions" in rel.parts and token.startswith("skills/"):
+                continue
             key = token.replace("/", "\\")
             # strip trailing separator so `tools/` -> `tools` (not `tools\`)
             bare = key.rstrip("\\")
-            if bare in index:
+            # resolve relative to the markdown file's own dir too (e.g. `indexes/upstream.db`
+            # inside skill-creator/docs is `<repo>/skill-creator/indexes/upstream.db`)
+            rel_md = md.parent.relative_to(REPO)
+            local_probe = rel_md / Path(token.replace("/", os.sep))
+            local_key = str(local_probe).replace("/", "\\")
+            if bare in index or local_key in index:
                 continue
             # directory-only ref (e.g. `tools/`): accept if any tracked file lives under it
             if any(f == bare or f.startswith(bare + "\\") for f in index):
