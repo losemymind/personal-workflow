@@ -43,6 +43,9 @@ python skill-creator/scripts/search_index.py "pdf" --json
 # 完整重建（默认：下载上游 tarball → 构建 → 自动清理）
 python skill-creator/scripts/build_index.py
 
+# 增量同步（推荐日常使用：复用现有 upstream.db，只更新增/改/删项，速度快）
+python skill-creator/scripts/build_index.py --incremental
+
 # 保留 tarball
 python skill-creator/scripts/build_index.py --keep
 
@@ -50,10 +53,4 @@ python skill-creator/scripts/build_index.py --keep
 python skill-creator/scripts/build_index.py --from-extracted <上游解压目录>
 ```
 
-**同步策略：** 手动触发（推荐）。索引文件已提交入仓库，用户克隆即得索引；仅当需要更新上游技能列表时重跑构建。
-
-## 后续演进
-
-- 上游新增技能 → 重跑 `build_index.py` 增量更新
-- 客户端定制索引（如仅索引某分类）→ 可在 `search_index.py` 增加 `--category` 组合筛选
-- 语义检索 → 后续可在索引中加入 embedding 向量（需要时再设计）
+**同步策略：** 手动触发（推荐）。索引文件已提交入仓库，用户克隆即得索引；日常更新上游用 `--incremental`（快），索引结构变更时用完整重建。

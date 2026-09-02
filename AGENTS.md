@@ -75,9 +75,15 @@ python tools/scripts/install_agent.py --client <claude|opencode|codex|deepseek> 
 ## 生命周期操作（维护）
 
 ```bash
-python tools/scripts/update_skill.py <技能名>          # 升级（自动备份旧版）
-python tools/scripts/uninstall_skill.py <技能名>       # 卸载（仅限本仓库装的）
-python tools/scripts/rollback_skill.py <技能名>        # 回滚上一版本
+# 技能
+python tools/scripts/update_skill.py <技能名> --source <新版目录>   # 升级（自动备份旧版）
+python tools/scripts/uninstall_skill.py <技能名>                    # 卸载（仅限本仓库装的）
+python tools/scripts/rollback_skill.py <技能名>                     # 回滚上一版本
+
+# 代理（同构）
+python tools/scripts/update_agent.py <代理名> --source <新版目录或.md>
+python tools/scripts/uninstall_agent.py <代理名>
+python tools/scripts/rollback_agent.py <代理名>
 ```
 
 ## 目录导览

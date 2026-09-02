@@ -6,9 +6,11 @@ Data source: upstream's own skills_index.json (official metadata, fast & authori
 plus a local directory scan to enrich structure info (body lines, subdirs, file count).
 
 Usage:
-    python skill-creator/scripts/build_index.py           # download tarball + rebuild
-    python skill-creator/scripts/build_index.py --keep    # keep downloaded tarball
-    python skill-creator/scripts/build_index.py --no-dl   # use repo root (local checkout)
+    python skill-creator/scripts/build_index.py                # download tarball + full rebuild
+    python skill-creator/scripts/build_index.py --incremental  # reuse upstream.db, sync changes only
+    python skill-creator/scripts/build_index.py --keep         # keep downloaded tarball
+    python skill-creator/scripts/build_index.py --no-dl        # use repo root (local checkout)
+    python skill-creator/scripts/build_index.py --from-extracted <dir>  # use an extracted checkout
 
 Exit code 0 = success.
 """
@@ -17,7 +19,6 @@ import argparse
 import io
 import json
 import os
-import re
 import sqlite3
 import sys
 import tarfile
@@ -31,7 +32,7 @@ TARBALL_URL = UPSTREAM_URL + "/archive/refs/heads/main.tar.gz"
 SCRIPT_DIR = Path(__file__).resolve().parent
 INDEX_DIR = SCRIPT_DIR.parent / "indexes"
 DB_PATH = INDEX_DIR / "upstream.db"
-INDEX_VERSION = 2
+INDEX_VERSION = 3
 
 
 def configure_utf8_output() -> None:
@@ -46,11 +47,7 @@ def configure_utf8_output() -> None:
             pass
         buffer = getattr(stream, "buffer", None)
         if buffer is not None:
-            setattr(
-                sys,
-                stream_name,
-                io.TextIOWrapper(buffer, encoding="utf-8", errors="backslashreplace"),
-            )
+            setattr(sys, stream_name, io.TextIOWrapper(buffer, encoding="utf-8", errors="backslashreplace"))
 
 
 def download_tarball(dest: Path) -> Path:
@@ -72,7 +69,6 @@ def unpack_tarball(tar_path: Path, dest: Path) -> Path:
 
 
 def load_official_index(repo_root: Path) -> list[dict]:
-    """Read upstream's own skills_index.json (fallback: scan SKILL.md files)."""
     f = repo_root / "skills_index.json"
     if f.exists():
         data = json.loads(f.read_text(encoding="utf-8"))
@@ -83,7 +79,6 @@ def load_official_index(repo_root: Path) -> list[dict]:
 
 
 def enrich_structure(repo_root: Path, entry: dict) -> dict:
-    """Scan the skill dir to add structure info (body lines, subdirs, file count, flags)."""
     rel = entry.get("path", "").removesuffix("/")
     skill_dir = repo_root / rel
     result = {
@@ -108,17 +103,54 @@ def enrich_structure(repo_root: Path, entry: dict) -> dict:
     result["has_references"] = int("references" in subdirs)
     result["has_examples"] = int("examples" in subdirs)
     result["has_templates"] = int("templates" in subdirs)
-    result["file_count"] = sum(
-        1 for _, _, fs in os.walk(skill_dir) for f in fs if not f.startswith(".")
-    )
+    result["file_count"] = sum(1 for _, _, fs in os.walk(skill_dir) for f in fs if not f.startswith("."))
     return result
 
 
-def build_db(entries: list[dict], repo_root: Path, db_path: Path) -> int:
-    INDEX_DIR.mkdir(parents=True, exist_ok=True)
-    if db_path.exists():
-        db_path.unlink()
-    conn = sqlite3.connect(str(db_path))
+SKILLS_COLUMNS = """(name, path, description, category, risk, source, date_added, author,
+     tags, tools, client_targets, has_script, has_references, has_examples,
+     has_templates, body_lines, file_count, subdirs)"""
+
+
+def extract_fields(e: dict, repo_root: Path) -> tuple:
+    tags = e.get("tags") or []
+    plugin = e.get("plugin") or {}
+    targets = plugin.get("targets") or {}
+    tools = json.dumps(list(targets.keys()), ensure_ascii=False) if targets else None
+    st = enrich_structure(repo_root, e)
+    return (
+        e.get("name") or e.get("id"),
+        e.get("path") or (e.get("id") and "skills/" + e["id"]),
+        e.get("description"),
+        e.get("category"),
+        e.get("risk"),
+        e.get("source"),
+        e.get("date_added"),
+        e.get("author"),
+        json.dumps(tags, ensure_ascii=False) if tags else None,
+        tools,
+        json.dumps(targets, ensure_ascii=False) if targets else None,
+        st["has_script"],
+        st["has_references"],
+        st["has_examples"],
+        st["has_templates"],
+        st["body_lines"],
+        st["file_count"],
+        st["subdirs"],
+    )
+
+
+def fts_args(e: dict) -> tuple:
+    tags = e.get("tags") or []
+    return (
+        e.get("name") or e.get("id"),
+        e.get("description") or "",
+        e.get("category") or "",
+        " ".join(tags) if tags else "",
+    )
+
+
+def create_schema(conn: sqlite3.Connection) -> None:
     cur = conn.cursor()
     cur.execute(
         """
@@ -145,58 +177,30 @@ def build_db(entries: list[dict], repo_root: Path, db_path: Path) -> int:
         )
         """
     )
-    cur.execute(
-        "CREATE VIRTUAL TABLE skills_fts USING fts5(name, description, category, tags)"
-    )
+    cur.execute("CREATE VIRTUAL TABLE skills_fts USING fts5(name, description, category, tags)")
+    cur.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
+
+
+def build_db(entries: list[dict], repo_root: Path, db_path: Path) -> int:
+    INDEX_DIR.mkdir(parents=True, exist_ok=True)
+    if db_path.exists():
+        db_path.unlink()
+    conn = sqlite3.connect(str(db_path))
+    create_schema(conn)
+    cur = conn.cursor()
     count = 0
     for e in entries:
-        tags = e.get("tags") or []
-        plugin = e.get("plugin") or {}
-        targets = plugin.get("targets") or {}
-        tools = json.dumps(list(targets.keys()), ensure_ascii=False) if targets else None
-        st = enrich_structure(repo_root, e)
+        fields = extract_fields(e, repo_root)
         cur.execute(
-            """
-            INSERT INTO skills
-            (name, path, description, category, risk, source, date_added, author,
-             tags, tools, client_targets, has_script, has_references, has_examples,
-             has_templates, body_lines, file_count, subdirs)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """,
-            (
-                e.get("name") or e.get("id"),
-                e.get("path") or (e.get("id") and "skills/" + e["id"]),
-                e.get("description"),
-                e.get("category"),
-                e.get("risk"),
-                e.get("source"),
-                e.get("date_added"),
-                e.get("author"),
-                json.dumps(tags, ensure_ascii=False) if tags else None,
-                tools,
-                json.dumps(targets, ensure_ascii=False) if targets else None,
-                st["has_script"],
-                st["has_references"],
-                st["has_examples"],
-                st["has_templates"],
-                st["body_lines"],
-                st["file_count"],
-                st["subdirs"],
-            ),
+            "INSERT INTO skills " + SKILLS_COLUMNS + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            fields,
         )
         rowid = cur.lastrowid
         cur.execute(
             "INSERT INTO skills_fts(rowid, name, description, category, tags) VALUES (?,?,?,?,?)",
-            (
-                rowid,
-                e.get("name") or e.get("id"),
-                e.get("description") or "",
-                e.get("category") or "",
-                " ".join(tags) if tags else "",
-            ),
+            (rowid, *fts_args(e)),
         )
         count += 1
-    cur.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
     cur.execute("INSERT INTO meta VALUES ('version', ?)", (str(INDEX_VERSION),))
     cur.execute("INSERT INTO meta VALUES ('source_repo', ?)", (UPSTREAM_URL,))
     cur.execute("INSERT INTO meta VALUES ('built_at', ?)", (datetime.now().isoformat(timespec="seconds"),))
@@ -207,9 +211,136 @@ def build_db(entries: list[dict], repo_root: Path, db_path: Path) -> int:
     return count
 
 
+def update_db_incremental(entries: list[dict], repo_root: Path, db_path: Path) -> dict:
+    if not db_path.exists():
+        print("ℹ️  No existing index; falling back to full build.")
+        count = build_db(entries, repo_root, db_path)
+        return {"added": count, "updated": 0, "removed": 0}
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    # ensure meta table exists (older dbs had one; tolerate if missing)
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='meta'")
+    if cur.fetchone() is None:
+        cur.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
+
+    cur.execute("SELECT path FROM skills")
+    known = {row[0] for row in cur.fetchall() if row[0]}
+    incoming = set()
+    for e in entries:
+        path = e.get("path") or (e.get("id") and "skills/" + e["id"])
+        if path:
+            incoming.add(path)
+
+    added = updated = 0
+    for e in entries:
+        path = e.get("path") or (e.get("id") and "skills/" + e["id"])
+        if not path:
+            continue
+        fields = extract_fields(e, repo_root)
+        if path in known:
+            cur.execute(
+                """
+                UPDATE skills SET
+                  name=?, description=?, category=?, risk=?, source=?, date_added=?,
+                  author=?, tags=?, tools=?, client_targets=?, has_script=?,
+                  has_references=?, has_examples=?, has_templates=?, body_lines=?,
+                  file_count=?, subdirs=?
+                WHERE path=?
+                """,
+                fields[:1] + fields[2:] + (path,),
+            )
+            cur.execute(
+                "INSERT OR REPLACE INTO skills_fts(rowid, name, description, category, tags)"
+                " SELECT id, name, description, category, tags FROM skills WHERE path=?",
+                (path,),
+            )
+            updated += 1
+        else:
+            cur.execute(
+                "INSERT INTO skills " + SKILLS_COLUMNS + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                fields,
+            )
+            rowid = cur.lastrowid
+            cur.execute(
+                "INSERT INTO skills_fts(rowid, name, description, category, tags) VALUES (?,?,?,?,?)",
+                (rowid, *fts_args(e)),
+            )
+            added += 1
+
+    vanished = known - incoming
+    removed = len(vanished)
+    for path in sorted(vanished):
+        cur.execute(
+            "DELETE FROM skills_fts WHERE rowid = (SELECT id FROM skills WHERE path=?)",
+            (path,),
+        )
+        cur.execute("DELETE FROM skills WHERE path=?", (path,))
+
+    cur.execute("INSERT OR REPLACE INTO meta VALUES ('built_at', ?)", (datetime.now().isoformat(timespec="seconds"),))
+    cur.execute("INSERT OR REPLACE INTO meta VALUES ('skill_count', ?)", (str(len(incoming)),))
+    conn.commit()
+    conn.close()
+    return {"added": added, "updated": updated, "removed": removed}
+
+
+def load_sources(args, tmp: Path) -> tuple[Path, list[dict]]:
+    repo_root = Path(__file__).resolve().parents[2]
+    if args.from_extracted:
+        repo_root = Path(args.from_extracted)
+        print(f"🗂️  Using extracted checkout: {repo_root}")
+        entries = load_official_index(repo_root)
+        if not entries:
+            print("❌ skills_index.json missing in that checkout; aborting.")
+            sys.exit(1)
+    elif args.no_dl:
+        print(f"🗂️  Using local checkout: {repo_root}")
+        entries = load_official_index(repo_root)
+        if not entries:
+            print("❌ No skills_index.json found locally. Run without --no-dl to download.")
+            sys.exit(1)
+    else:
+        tar_path = download_tarball(tmp)
+        try:
+            top = unpack_tarball(tar_path, tmp / "unpack")
+            entries = load_official_index(top)
+            if not entries:
+                print("❌ skills_index.json missing in tarball; aborting.")
+                sys.exit(1)
+        except Exception as e:
+            print(f"❌ Unpack failed: {e}")
+            sys.exit(1)
+        repo_root = top
+    return repo_root, entries
+
+
+def cleanup_tmp(tmp: Path, keep: bool) -> None:
+    if keep:
+        return
+    for p in tmp.rglob("*"):
+        if p.is_file():
+            try:
+                p.unlink()
+            except OSError:
+                pass
+    for p in sorted(tmp.rglob("*"), key=lambda x: -len(x.parts)):
+        if p.is_dir():
+            try:
+                for child in p.rglob("*"):
+                    if child.is_file():
+                        try:
+                            child.chmod(0o644)
+                        except OSError:
+                            pass
+                p.rmdir()
+            except OSError:
+                pass
+
+
 def main() -> int:
     configure_utf8_output()
     parser = argparse.ArgumentParser(description="Build upstream skills SQLite index")
+    parser.add_argument("--incremental", action="store_true", help="Reuse upstream.db; sync only added/updated/removed")
     parser.add_argument("--keep", action="store_true", help="Keep the downloaded tarball")
     parser.add_argument("--no-dl", action="store_true", help="Use repo root (local checkout) instead of downloading")
     parser.add_argument("--from-extracted", default=None, help="Build from an already-extracted upstream checkout dir")
@@ -218,57 +349,19 @@ def main() -> int:
     tmp = Path(tempfile.gettempdir()) / "pw-upstream-index"
     tmp.mkdir(parents=True, exist_ok=True)
 
-    repo_root = Path(__file__).resolve().parents[2]
-    if args.from_extracted:
-        repo_root = Path(args.from_extracted)
-        print(f"🗂️  Using extracted checkout: {repo_root}")
-        entries = load_official_index(repo_root)
-        if not entries:
-            print("❌ skills_index.json missing in that checkout; aborting.")
-            return 1
-    elif args.no_dl:
-        print(f"🗂️  Using local checkout: {repo_root}")
-        entries = load_official_index(repo_root)
-        if not entries:
-            print("❌ No skills_index.json found locally. Run without --no-dl to download.")
-            return 1
+    repo_root, entries = load_sources(args, tmp)
+
+    if args.incremental:
+        print(f"🔍 Incremental sync: {len(entries)} upstream entries vs existing {DB_PATH}")
+        result = update_db_incremental(entries, repo_root, DB_PATH)
+        print(f"✅ Incremental done: +{result['added']} added, ~{result['updated']} updated, -{result['removed']} removed")
     else:
-        tar_path = download_tarball(tmp)
-        try:
-            top = unpack_tarball(tar_path, tmp / "unpack")
-            entries = load_official_index(top)
-            if not entries:
-                print("❌ skills_index.json missing in tarball; aborting.")
-                return 1
-        except Exception as e:
-            print(f"❌ Unpack failed: {e}")
-            return 1
-        repo_root = top
+        print(f"🔍 Enriching structure for {len(entries)} skills (dir scan)...")
+        count = build_db(entries, repo_root, DB_PATH)
+        print(f"✅ Indexed {count} skills -> {DB_PATH}")
 
-    print(f"🔍 Enriching structure for {len(entries)} skills (dir scan)...")
-    count = build_db(entries, repo_root, DB_PATH)
-    print(f"✅ Indexed {count} skills -> {DB_PATH}")
-
-    if not args.from_extracted and not args.no_dl and not args.keep:
-        for p in tmp.rglob("*"):
-            if p.is_file():
-                try:
-                    p.unlink()
-                except OSError:
-                    pass
-        for p in sorted(tmp.rglob("*"), key=lambda x: -len(x.parts)):
-            if p.is_dir():
-                try:
-                    # tarball-unpacked dirs are often read-only on Windows
-                    for child in p.rglob("*"):
-                        if child.is_file():
-                            try:
-                                child.chmod(0o644)
-                            except OSError:
-                                pass
-                    p.rmdir()
-                except OSError:
-                    pass
+    if not args.from_extracted and not args.no_dl:
+        cleanup_tmp(tmp, args.keep)
     return 0
 
 

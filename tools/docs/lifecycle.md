@@ -22,6 +22,26 @@ python tools/scripts/install_skill.py <技能目录> --dry-run
 
 代理安装同构：`python tools/scripts/install_agent.py ...`
 
+## 代理生命周期（update / uninstall / rollback）
+
+与技能同构（manifest-driven），命令为：
+
+```bash
+# 升级（先备份旧版到 ~/.personal-workflow/backups/<name>/<旧版本>/）
+python tools/scripts/update_agent.py <代理名> --source <新版代理目录或 .md 文件>
+
+# 卸载（仅删带 manifest 标记的安装）
+python tools/scripts/uninstall_agent.py <代理名>
+
+# 回滚（恢复备份版本）
+python tools/scripts/rollback_agent.py <代理名> [--version 0.1.0]
+```
+
+差异说明：
+- 代理支持**目录形态**（`agents/<name>/AGENT.md`）与**单文件形态**（`<name>.md`）两种安装方式。
+- 单文件形态的 manifest 是**侧车文件** `<name>.manifest.json`（与代理文件同目录），生命周期工具按此查找。
+- 版本记录读取 AGENT.md frontmatter 的 `version` 字段（缺失时按 0.1.0）。
+
 ## 升级（update）
 
 ```bash
@@ -65,6 +85,6 @@ Windows 下 `~` 对应 `%USERPROFILE%`，`~/.config` 对应 `%APPDATA%`。
 
 ## 约定
 
-- 技能 frontmatter 应含 `version: x.y.z`（语义化版本），安装/升级/回滚依赖它记账。
-- 只卸载/回滚"本仓库安装的"（manifest 标记的）技能，不动用户自有安装。
+- 技能/代理 frontmatter 应含 `version: x.y.z`（语义化版本），安装/升级/回滚依赖它记账。
+- 只卸载/回滚"本仓库安装的"（manifest 标记的）技能/代理，不动用户自有安装。
 - 安装后需重启客户端才生效。

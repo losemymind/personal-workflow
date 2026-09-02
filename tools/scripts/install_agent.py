@@ -55,9 +55,23 @@ def save_manifest(path: Path, manifest: dict) -> None:
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def agent_version(src: Path) -> str:
+    """Read the `version` field from AGENT.md frontmatter (source file or dir)."""
+    file = (src / "AGENT.md") if src.is_dir() else src
+    if file.exists():
+        import re
+
+        content = file.read_text(encoding="utf-8", errors="replace")
+        m = re.search(r"^version:\s*[\"']?([0-9]+(?:\.[0-9]+){0,2})[\"']?", content, re.MULTILINE)
+        if m:
+            return m.group(1)
+    return "0.1.0"
+
+
 def manifest_for_agent(agent_dir: Path, name: str) -> dict:
     return {
         "name": name,
+        "version": agent_version(agent_dir),
         "source": str(agent_dir),
         "installed_at": datetime.now().isoformat(timespec="seconds"),
     }
@@ -79,7 +93,8 @@ def install_one(client: str, src: Path, dest_override: Path | None = None) -> Pa
             raise FileExistsError(f"{dst} already exists. Uninstall first.")
         copy_agent(src, dst)
         manifest = manifest_for_agent(src, src.stem)
-        save_manifest(dst.parent / MANIFEST_NAME, manifest) if dst.parent.is_dir() else None
+        # single-file agents use a sidecar manifest next to the file
+        save_manifest(dst.with_suffix(".manifest.json"), manifest)
     print(f"✅ [{client}] installed agent {src.name} -> {dst}")
     return dst
 
