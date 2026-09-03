@@ -9,6 +9,7 @@ permission:
 version: "0.1.0"
 tools_clients: [claude, opencode, codex, deepseek]
 tags: [code-review, quality, agent]
+maturity: runtime-verified
 ---
 
 # code-reviewer

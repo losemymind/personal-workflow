@@ -1,7 +1,7 @@
 # PersonalWorkflow 交接文档（HANDOFF）
 
 > 用途：新会话快速恢复上下文。读完本文件即可接手开发。
-> 生成日期：2026-09-02 ｜ 最近提交见 `git log --oneline -5`
+> 生成日期：2026-09-03 ｜ 最近提交见 `git log --oneline -5`
 ## 1. 这是什么
 
 个人工作流工具库，跑通 **检索上游 → 创建 → 对比择优 → 验证 → 安装 → 回馈** 的完整闭环。支持四个 LLM 客户端：**claude / opencode / codex / deepseek-harness**。仓库远程：`https://github.com/losemymind/personal-workflow.git`（分支 `main`）。
@@ -54,7 +54,7 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 ### tools（分发与生命周期）
 - `client_paths.py`：四端路径矩阵（唯一事实源）
 - `install_skill.py` / `install_agent.py`：四端安装（manifest 标记 `.personal-workflow-manifest.json`）
-- `build_catalog.py`：能力目录生成器（`skills/CATALOG.md` + `agents/CATALOG.md`，`--check` 防漂移）
+- `build_catalog.py`：能力目录生成器（`skills/CATALOG.md` + `agents/CATALOG.md`，`--check` 防漂移；agent 条目渲染 `maturity` 字段；**递归扫描子目录** `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染——`ue-game-studio` / `academic` / 顶层通用）
 - `update/uninstall/rollback_skill.py` + `_agent.py`：生命周期（备份至 `~/.personal-workflow/backups/`）
 - `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）
 - deepseek 路径为 best-effort（`DEEPSEEK_HARNESS_ROOT` 覆盖），未实测
@@ -62,7 +62,15 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 ### 按需安装 + 创建决策（能力目录）
 - `skills/CATALOG.md` / `agents/CATALOG.md`：本地已验证能力清单（LLM 检索 → 命中给 install 命令 → 人类确认）
 - **职责分层**：skill-creator/agent-creator 是可独立安装的生产器（闭环 = 创建 → 检索上游对比 → 上游更优反哺自身 `evolutions/`，目录内不含上层编排）；**编排只在根 AGENTS**：查本地候选 A → 无论有无都调生成器产出 B → A vs B 谁优用谁
-- agent 字段 schema 与 skill 不同：agent 无 category/source/date_added，用 mode/tags 分类
+- agent 字段 schema 与 skill 不同：agent 无 category/source/date_added，用 mode/tags 分类；另有 `maturity` 字段分两档：`runtime-verified`（真实试跑过）/ `static-verified`（仅静态 --strict，待运行时验证）——`build_catalog.py` 会把该字段渲染进 CATALOG 条目
+
+### 外部库迁移（UEGameStudio → agents/）
+- 来源：`E:\GitHub\UEGameStudio\UEGameStudio\agents`（30 代理，7 层：academic×5 / design×3 / directors×4 / orchestration×1 / production×3 / qa×3 / technical×11）
+- 结构：6 个层（design/directors/orchestration/production/qa/technical，25 代理）迁入 `agents/ue-game-studio/<layer>/<id>/AGENT.md`（UE 专用安装包）；`academic/`（5 代理）作为**公共代理**保留在 `agents/academic/`（**层内不以 `academic-` 作前缀**，如 `anthropologist/`）；非分层通用代理 code-reviewer 保留顶层
+- 自包含：包内文件**已去除对 UEGameStudio 源仓库的引用**（AGENTS.md/README.md 改写为自包含描述）；包内引用公共代理用包相对路径 `../academic/<agent>`（仓库根视角 `agents/academic/<agent>`），经 `Test-Path` 验证可解析；包文件 = `AGENTS.md`（协作规则）+ `README.md`（安装清单 + 冲突处理：冲突让用户选择保留哪一个，确认前不覆盖）
+- 适配：保留全部正文与 frontmatter；补 `name`/`version`/`tags[maturity]`；`完成检查`→`完成标准`；注入 职责范围(必须做/拒绝做)/工具与权限/协作协议(升级交还) 指针化章节——全部通过 `validate_agents.py --strict`（31/31 含 code-reviewer）
+- `domain` 标签：统一为 `ue-game-studio`（30 个全部）；layer 保留原 7 层；目录放置与 `layer` 标签一致
+- 状态：全部 `static-verified`（仅静态），仅 code-reviewer 为 `runtime-verified`；真实 UE Editor / 运行时验证待后续
 
 ### 文档质量
 - 根 `AGENTS.md` 为总编排；`skill-creator/AGENTS.md` / `agent-creator/AGENTS.md` 为各自独立技能引导（随技能分发）
@@ -75,7 +83,9 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 # 按需安装已有能力（先查后建：本地优先）—— 让 LLM 读目录匹配，命中给 install 命令
 #   skills/CATALOG.md  ·  agents/CATALOG.md
 python tools/scripts/install_skill.py [--client opencode|claude|codex|deepseek] skills/<name>
-python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/<name>
+python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/ue-game-studio/<layer>/<name>   # UE 包内 agent
+python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/academic/<name>                 # 公共学术代理
+python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/<name>                         # 顶层通用代理
 
 # 能力目录：生成 / 校验（新增回馈后跑，CI 用 --check）
 python tools/scripts/build_catalog.py
@@ -123,6 +133,8 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | **代理三源索引（agency+ccgs+agency-zh，568 代理）** | ✅ 已入库（agent-creator/indexes/upstream.db，含中文 agency-zh） |
 | 中文检索（CJK LIKE 兜底） | ✅ search_index / search_agent_index 均支持中文关键词 |
 | 首个入库技能/代理（pr-summarizer / code-reviewer） | ✅ 已验证并安装到 opencode |
+| **外部库迁移：UEGameStudio 30 代理** | ✅ 6 层（25 代理）入 `agents/ue-game-studio/<layer>/`，academic 5 个保留 `agents/academic/`（公共，层内无 `academic-` 前缀）；包内已自包含（无 UEGameStudio 源引用），公共代理用 `../academic/` 相对路径引用；31/31 strict 通过 |
+| **能力目录递归 + 分组** | ✅ build_catalog.py 递归扫 `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染（`ue-game-studio` / `academic` / 顶层通用），install 路径含层前缀 |
 | agent 生命周期（update/uninstall/rollback） | ✅ 已补齐（目录+单文件形态） |
 | CI（strict 验证 + pytest + 文档检查 + 目录同步） | ✅ 已配置 |
 | 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 生产器独立化（闭环 3 步，不含编排）+ 编排收敛到根 AGENTS（A vs B 谁优用谁） |
@@ -130,6 +142,7 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | 文档引用一致性检查器 | ✅ 零误报 |
 | **deepseek-harness 路径实测** | ⚠️ 未做（需真实环境；`DEEPSEEK_HARNESS_ROOT` 兜底） |
 | **opencode 真实安装待重启验证** | ⚠️ pr-summarizer/code-reviewer 已 install，需重启客户端确认加载 |
+| **UEGameStudio 30 代理运行时验证** | ⚠️ 全为 `static-verified`，需在真实 UE Editor / 目标项目试跑后逐档升 `runtime-verified`，并同步 CATALOG |
 | **上游索引更新频率** | 建议定期用 `--source <单源>` 手动同步（技能/代理各自脚本） |
 | **新技能/代理持续沉淀** | 按需用本仓库流程创建后回馈到 skills/、agents/（重跑 build_catalog.py） |
 

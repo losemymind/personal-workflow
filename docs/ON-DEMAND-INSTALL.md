@@ -112,7 +112,7 @@ manifest 记账 · 重启客户端生效
 
 逻辑：
 
-1. 扫 skills/*/SKILL.md、agents/*/AGENT.md（跳过 `.` 开头目录与 examples/）。
+1. 递归扫 skills/*/SKILL.md、agents/**/AGENT.md（跳过 `.` 开头目录与 examples/、references/、templates/；agent 条目按顶层类别分组渲染，如 `ue-game-studio` / `academic` / 顶层）。
 2. 解析 frontmatter（**轻量自解析**：约 30 行，只取本目录所需字段；**不 import 验证器**——避免工具间 import 脆弱与 sys.path hack）。
 3. 缺省字段回填默认值（category→未分类 等），保证条目 schema 完整。
 4. 触发器提炼：对 skill 从"何时使用"小节取第一段非空行；对 agent 从 description 提取（V1 简化：可整段引用 description，或留 见 SKILL.md）。

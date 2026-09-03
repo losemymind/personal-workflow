@@ -42,6 +42,8 @@ DEFAULTS = {
 
 # Readme/catalog/resource files that are NOT capability entries.
 EXCLUDED_NAMES = {"README.md", "CATALOG.md"}
+# Sub-dirs that must never be scanned as capability entries (reference/template/examples material).
+EXEMPT_DIRS = {"examples", "references", "templates"}
 
 
 def configure_utf8_output() -> None:
@@ -110,28 +112,38 @@ def first_when_to_use(content: str, head: list[str]) -> str:
 
 
 def discover(root: Path, kind: str, entry_file: str, verbose: bool) -> list[dict]:
-    """Scan a library dir (skills/ or agents/) and return per-entry data."""
+    """Recursively scan a library dir (skills/ or agents/) and return per-entry data.
+
+    An entry is any directory (at any depth) that directly holds the canonical
+    entry file (SKILL.md / AGENT.md). Sub-dirs under an excluded name and hidden
+    dirs are skipped. install/path are relative to the library root, so nested
+    layering (e.g. agents/<layer>/<id>/AGENT.md) is preserved in the catalog.
+    """
     entries = []
-    for sub in sorted(root.iterdir()):
-        if not sub.is_dir() or sub.name.startswith(".") or sub.name in EXCLUDED_NAMES:
+    for sub in sorted(root.rglob("*")):
+        if not sub.is_dir():
             continue
-        fm_file = sub / entry_file
-        if not fm_file.exists():
-            if verbose:
+        rel = sub.relative_to(root)
+        if any(part.startswith(".") or part in EXCLUDED_NAMES | EXEMPT_DIRS for part in rel.parts):
+            continue
+        if not (sub / entry_file).exists():
+            if verbose and (sub.parent == root):
                 print(f"  · skip {sub.name}: no {entry_file}")
             continue
-        content = fm_file.read_text(encoding="utf-8", errors="replace")
+        content = (sub / entry_file).read_text(encoding="utf-8", errors="replace")
         fm = parse_frontmatter(content)
         if not fm:
             if verbose:
                 print(f"  · skip {sub.name}: no frontmatter in {entry_file}")
             continue
-        install_target = f"{root.name}/{sub.name}" if root.name in ("skills", "agents") else f"{kind}/{sub.name}"
+        rel_path = rel.as_posix()
+        install_target = f"{root.name}/{rel_path}" if root.name in ("skills", "agents") else f"{kind}/{rel_path}"
         entry = {
             "kind": kind,
             "name": fm.get("name") or sub.name,
-            "dir": sub.name,
-            "path": f"{root.name}/{sub.name}",
+            "category": rel.parts[0],
+            "dir": rel_path,
+            "path": f"{root.name}/{rel_path}",
             "install": f"python tools/scripts/install_{'skill' if kind == 'skill' else 'agent'}.py {install_target}",
             "description": fm.get("description") or "",
             "tags": fm.get("tags") or "",
@@ -149,6 +161,7 @@ def discover(root: Path, kind: str, entry_file: str, verbose: bool) -> list[dict
             # Agent frontmatter schema: no category/source/date_added; mode + tags carry taxonomy.
             entry["mode"] = fm.get("mode") or DEFAULTS["mode"]
             entry["version"] = fm.get("version") or DEFAULTS["version"]
+            entry["maturity"] = fm.get("maturity") or "-"
         entries.append(entry)
     return entries
 
@@ -166,6 +179,8 @@ def render_entry(e: dict) -> str:
         ]
     else:
         rows = [("mode", e["mode"]), ("version", e["version"])]
+        if e.get("maturity"):
+            rows.append(("maturity", e["maturity"]))
     if e.get("tags"):
         rows.append(("tags", e["tags"]))
     rows.append(("install", f"`{e['install']}`"))
@@ -193,12 +208,42 @@ def header(kind: str) -> str:
 
 
 def render_catalog(library: Path, kind: str, entry_file: str, verbose: bool) -> str:
+    """Render the catalog, grouping entries by top-level category when the
+    library is multi-category (e.g. agents/: ue-game-studio / academic / top-level).
+    Single-category libraries (skills/: flat) render without group headers.
+    """
     entries = discover(library, kind, entry_file, verbose)
     parts = [header(kind)]
     if not entries:
         parts.append("_（暂无能力）_\n")
+        return "\n".join(parts) + "\n"
+
+    groups: dict[str, list[dict]] = {}
     for e in entries:
-        parts.append(render_entry(e))
+        top = e["category"] if "/" in e["dir"] else "__top__"
+        groups.setdefault(top, []).append(e)
+
+    if kind == "skill" or len(groups) == 1:
+        for e in entries:
+            parts.append(render_entry(e))
+        return "\n".join(parts) + "\n"
+
+    def _order_key(g: str) -> tuple:
+        # Top-level agents first (code-reviewer…), then named category dirs alphabetically.
+        return (0 if g == "__top__" else 1, g)
+
+    for group in sorted(groups, key=_order_key):
+        g_entries = groups[group]
+        g_entries.sort(key=lambda x: x["name"])
+        if group == "__top__":
+            title = "## 顶层通用代理\n"
+        else:
+            title = f"## 分组：{group}\n"
+        parts.append(title)
+        if group != "__top__":
+            parts.append(f"_共 {len(g_entries)} 个代理，安装路径位于 `agents/{group}/` 下。_\n")
+        for e in g_entries:
+            parts.append(render_entry(e))
     return "\n".join(parts) + "\n"
 
 
