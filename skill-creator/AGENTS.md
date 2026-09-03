@@ -63,7 +63,11 @@ python skill-creator/scripts/validate_skills.py [--strict] [--dir <技能目录>
 按 `SKILL.md` 阶段 6-7：先用真实场景跑一次技能，再运行触发测试：
 
 ```bash
-python skill-creator/scripts/run_trigger_tests.py <技能目录> --evals <技能目录>/evals.json
+# 触发测试（两档：启发式默认 / 真实客户端无头 CLI）
+python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录>
+python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
+python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --improve-mode manual|cli
+python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技能名>
 ```
 
 （evals.json 从 `templates/evals.json.template` 复制；给出触发准确性启发式信号）
@@ -99,6 +103,7 @@ python tools/scripts/install_skill.py [--client <claude|opencode|codex|deepseek>
 | `references/quality-bar.md` | 需要质量标准/验证器检查项时 |
 | `references/skill-index.md` | 需要索引构建/检索/增量同步说明时 |
 | `references/skill-comparison.md` | 进行对比择优时 |
+| `references/benchmark-schema.md` | 做量化基准（run_eval / run_loop / aggregate_benchmark 的 JSON 结构）时 |
 | `examples/` | 创建前研究结构范本（上游学习样本，验证豁免） |
 | `evolutions/` | 记录"上游更优"对比结论（反馈闭环） |
 | `templates/` | `SKILL.template.md`（骨架）、`evals.json.template`（触发测试模板） |

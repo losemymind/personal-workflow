@@ -37,6 +37,16 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 
 > skill-creator/agent-creator 是**可独立安装的技能**（不与本仓库耦合，自身含完整工作流，见各自 AGENTS.md）。本仓库只把它们当作生产器调用：查本地 → 调生成 → 对比取优在**本层完成**，不写入生成器内部。
 
+### 入库准入规则（硬性约束）
+
+任何能力进入 `skills/` 或 `agents/` 库，必须同时满足以下三条（违反视为不合规，需整改）：
+
+1. **代理必经 agent-creator**：放入本库 `agents/` 的代理，**无论参考自本地其他文件还是远程仓库**，入库前都必须经过 `agent-creator`（创建/改进 → 验证 → 对比择优），并在 `docs/AGENTS-AUDIT.md` 登记。
+2. **技能必经 skill-creator**：放入本库 `skills/` 的技能，**无论参考自本地其他文件还是远程仓库**，入库前都必须经过 `skill-creator`（创建/改进 → 检索上游对比 → 验证），并在 `docs/SKILLS-AUDIT.md` 登记。
+3. **外部来源必标注数据来源**：本仓库 `agents/` 与 `skills/` 中的能力**若参考了外部仓库**，必须在对应审计文件（`docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md`）中标注数据来源（外部仓库地址 / 上游索引来源 / 上游条目）。
+
+> 审计文件是数据来源与入库合规性的**唯一记录入口**：新增、迁移、改进或整改能力后，同步更新 `docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md`。
+
 ### 创建/改进技能或代理（总览）
 
 以技能为例（代理同构，生成器换 `agent-creator`）：
@@ -73,6 +83,7 @@ python tools/scripts/rollback_agent.py <代理名>
 - `skills/CATALOG.md` / `agents/CATALOG.md` — 已验证能力目录（自动生成）
 - `tools/scripts/build_catalog.py` — 能力目录生成器
 - `tools/docs/lifecycle.md` — 生命周期操作详解
+- `docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md` — 代理/技能审计（数据来源 + 入库合规唯一记录入口）
 - `docs/ON-DEMAND-INSTALL.md` — 按需安装与能力目录方案
 
 ## 客户端接入方式

@@ -36,6 +36,10 @@ skill-creator/
     create_skill.py         # 交互式脚手架生成器（含 version 字段）
     run_trigger_tests.py    # 触发测试运行器（启发式准确率/精确率/召回率）
     validate_skills.py      # 自动验证器（frontmatter/章节/安全/链接）
+    utils.py                # 共享：SKILL.md frontmatter 解析（四端通用）
+    run_eval.py             # 触发评测（heuristic 默认 / cli 双模式）
+    run_loop.py             # description 自动优化循环（train/test 60/40）
+    aggregate_benchmark.py  # 量化基准汇总（benchmark.json + benchmark.md，纯 stdlib）
     _project_paths.py       # 仓库根定位辅助
   indexes/
     upstream.db             # SQLite 索引（官方 skills_index.json + 结构扫描，随仓库提交）
@@ -45,6 +49,7 @@ skill-creator/
     quality-bar.md          # 质量标准与验证标准（6 项质量检查）
     skill-index.md          # 上游索引：构建/检索/增量更新说明
     skill-comparison.md     # 对比评分维度与择优流程
+    benchmark-schema.md     # 评测/基准 JSON schema（移植自 Anthropic 官方）
   templates/
     SKILL.template.md       # 新技能骨架模板（含 version 字段）
     evals.json.template     # 触发测试用例模板

@@ -26,7 +26,11 @@ skill-creator/
 │   ├── build_index.py          ← 构建上游技能索引（tarball→SQLite）
 │   ├── search_index.py         ← 检索上游索引（FTS5 全文/分类/风险）
 │   ├── compare_skills.py       ← 自建 vs 上游对比评分（质量6维+结构4维）
-│   └── validate_skills.py      ← 自动验证器（frontmatter/章节/安全/链接）
+│   ├── validate_skills.py      ← 自动验证器（frontmatter/章节/安全/链接）
+│   ├── utils.py                ← 共享：解析 SKILL.md frontmatter（四端通用）
+│   ├── run_eval.py             ← 触发评测（heuristic 默认 / cli 双模式）
+│   ├── run_loop.py             ← description 自动优化循环（train/test 60/40）
+│   └── aggregate_benchmark.py  ← 量化基准汇总（benchmark.json + benchmark.md）
 ├── indexes/
 │   └── upstream.db             ← SQLite 索引（官方 skills_index.json + 结构扫描）
 ├── references/
@@ -34,7 +38,8 @@ skill-creator/
 │   ├── skill-anatomy.md        ← 结构解剖与渐进式披露
 │   ├── quality-bar.md          ← 6 项质量检查与验证标准
 │   ├── skill-index.md          ← 索引构建/检索/更新说明
-│   └── skill-comparison.md     ← 对比评分维度与择优流程
+│   ├── skill-comparison.md     ← 对比评分维度与择优流程
+│   └── benchmark-schema.md     ← 评测/基准 JSON schema（移植自 Anthropic 官方）
 ├── examples/                   ← 上游学习样本（MIT 许可，验证豁免）
 │   ├── brainstorming/          ← 单文件·结构教科书
 │   ├── copywriting/            ← 单文件·流程门控
@@ -257,13 +262,24 @@ python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验�
 
 验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
 
-技能正文稳定后，可运行触发测试（`templates/evals.json.template` 为模板）：
+技能正文稳定后，用两套触发评测（`templates/evals.json.template` 为 evals 模板）：
 
 ```bash
-python skill-creator/scripts/run_trigger_tests.py <技能目录> --evals <技能目录>/evals.json
+# 1) 确定性触发启发式（无外部 CLI，默认）
+python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录>
+# 2) 真实客户端无头 CLI 触发（有 claude CLI 时可用；opencode/codex 后续可接入）
+python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
 ```
 
-给出触发准确性/精确率/召回率的启发式信号（实际触发行为仍需真实客户端运行确认）。
+输出每条查询的触发判定 + 汇总（passed/total、precision、recall）；`--json` 可机器读取。
+
+**量化迭代基准（借鉴 Anthropic 官方，客户端无关）**：对「有技能 vs 无技能基线」组织 `<workspace>/iteration-N/eval-<名>/<with_skill|without_skill>/run-1/grading.json`（+ `timing.json`），再汇总为带 mean±stddev 与 delta 的基准：
+
+```bash
+python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <名>
+```
+
+产物 `benchmark.json`（+ `benchmark.md`），直接读 delta 判断技能相对基线的真实增益；高方差 eval 视为 flaky 需更多 run。Schema 见 `references/benchmark-schema.md`。
 
 ### 阶段 5.5：与上游候选对比择优
 
@@ -298,16 +314,29 @@ python skill-creator/scripts/compare_skills.py <自建目录> <上游目录> --a
 
 测试用例与结果记录在工作区内，参考官方结构的元数据字段（eval id、描述性名称、断言、输出路径、时间/token）。
 
-### 阶段 7：描述优化（触发测试）
+### 阶段 7：描述优化（触发测试 + 自动优化循环）
 
-技能内容稳定后进行：
+技能内容稳定后进行。两档做法：
 
-1. 生成约 20 条**真实风格**的触发查询：约一半应触发、一半不应触发。不应触发的最有价值的是「近似干扰项」——关键词重叠但实际需要别的技能。
+**手动档（默认）**：
+1. 生成约 20 条**真实风格**触发查询：约一半应触发、一半不应触发。不应触发的最有价值的是「近似干扰项」——关键词重叠但实际需要别的技能。
 2. 请用户审阅并签名确认查询集。
-3. 用现版与改进版描述分别跑查询，对比触发率。
-4. 选择测试集分数更高的版本，向用户展示前后对比与得分。
+3. 用现版与改进版描述分别跑 `run_eval.py`，对比触发率。
+4. 选择测试集分数更高的版本，展示前后对比与得分。
 
-注意：复杂、多步、专精的查询才适合评估触发（简单单步查询无论描述多好都常不触发）。
+**自动档（借鉴 Anthropic 官方 run_loop，train/test 60/40 分层分集，防过拟合）**：
+
+```bash
+python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> \
+  --holdout 0.4 --max-iterations 5 --improve-mode manual|cli --report <输出>.json
+```
+
+- 评测按 `should_trigger` 分层的 60/40 切分为 train/test；每轮用当前 description 评 train+test，再按失败模式请求改写。
+- `--improve-mode manual`（默认）：打印改进提示词，粘贴返回的 description，以独立 `EOF` 行结束。
+- `--improve-mode cli`：调用客户端无头 CLI（如 `claude -p`）生成新 description。
+- **最终选取以 test 集得分最高者为准**（不选 train 满分者），避免过拟合到测试用例。
+
+注意：复杂、多步、专精的查询才适合评估触发（简单单步查询无论描述多好都常不触发）。触发评测结果 `--json` 输出写入 `evals/` 或技能目录，作为阶段 8 验证记录的一部分。
 
 ### 阶段 8：记录验证与治理信息
 
