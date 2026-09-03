@@ -212,7 +212,7 @@ def main() -> int:
     description = args.description
     if not description:
         if interactive:
-            description = ask("一句话描述（做什么+何时触发，≤200 字符）")
+            description = ask("一句话描述（做什么+何时触发，≤1024 字符）")
         else:
             description = f"{name} 工作流技能。"
 

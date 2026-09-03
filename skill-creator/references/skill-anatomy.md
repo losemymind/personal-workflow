@@ -29,7 +29,7 @@ skills/
 ### 必需字段
 
 - `name`：小写-连字符，**必须与文件夹名称完全一致**。示例：`stripe-integration`
-- `description`：一句话摘要 + 触发场景，≤200 字符（验证器上限 300），前端加载触发关键词
+- `description`：一句话摘要 + 触发场景，≤1024 字符（验证器上限 1024），前端加载触发关键词
 - `risk`：`none` / `safe` / `critical` / `offensive` / `unknown`
 - `source`：来源归属，`self` 表示原创
 

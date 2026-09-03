@@ -9,7 +9,7 @@
 `SKILL.md` 前置元数据必须是有效 YAML，并包含：
 
 - `name`：kebab-case，与文件夹名完全一致（长度 <64）
-- `description`：≤200 字符（验证器上限 300），清晰的价值主张 + 触发场景
+- `description`：≤1024 字符（验证器上限 1024），清晰的价值主张 + 触发场景
 - `risk`：`none` / `safe` / `critical` / `offensive` / `unknown` 之一
 - `source`：来源归属（原创用 `self`）
 - `version`：`x.y.z` 语义化格式（推荐，生命周期记账；缺失仅提示）

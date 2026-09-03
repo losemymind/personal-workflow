@@ -132,7 +132,7 @@ SKILL.md 顶部用 `---` 包裹 YAML frontmatter：
 ```yaml
 ---
 name: <skill-name>                 # 必需：小写-连字符，与目录名完全一致
-description: "..."                 # 必需：一句话说明 + 触发场景，≤200 字符
+description: "..."                 # 必需：一句话说明 + 触发场景，≤1024 字符
 category: <category>               # 必需：见下方分类值
 risk: <none|safe|critical|offensive|unknown>  # 必需
 source: <self|community|official|URL>         # self 表示原创
@@ -260,7 +260,7 @@ python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验�
 
 说明：默认扫描 `<repo>/skills/`（正式技能库）；校验本技能自身或新技能草稿时需 `--dir skill-creator` 或 `--dir <新技能目录>`。
 
-验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤300 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
+验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤1024 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
 
 技能正文稳定后，用两套触发评测（`templates/evals.json.template` 为 evals 模板）：
 
@@ -356,7 +356,7 @@ python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --
 
 **元数据：**
 - [ ] frontmatter 是有效 YAML，`name` 小写-连字符且与目录一致
-- [ ] `description` ≤200 字符，包含做什么 + 何时触发
+- [ ] `description` ≤1024 字符，包含做什么 + 何时触发
 - [ ] `risk` / `category` / `source` / `date_added` 已声明
 
 **内容质量：**

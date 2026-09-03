@@ -199,8 +199,8 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
             desc = metadata["description"]
             if not isinstance(desc, str):
                 errors.append(f"❌ {rel_path}: 'description' must be a string, got {type(desc).__name__}")
-            elif len(desc) > 300:
-                errors.append(f"❌ {rel_path}: Description is oversized ({len(desc)} chars). Must be concise.")
+            elif len(desc) > 1024:
+                errors.append(f"❌ {rel_path}: Description is oversized ({len(desc)} chars). Max 1024.")
 
         if "risk" not in metadata:
             msg = f"⚠️  {rel_path}: Missing 'risk' label (defaulting to 'unknown')"

@@ -1,6 +1,6 @@
 ---
 name: your-skill-name
-description: "一句话说明技能做什么以及何时触发（≤200 字符）：这个技能能完成什么，当用户提到哪些场景/说法时应该使用。前端加载具体的触发关键词，用第三人称。"
+description: "一句话说明技能做什么以及何时触发（≤1024 字符）：这个技能能完成什么，当用户提到哪些场景/说法时应该使用。前端加载具体的触发关键词，用第三人称。"
 category: productivity
 risk: safe
 source: self

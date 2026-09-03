@@ -22,7 +22,7 @@ tools: [claude, opencode, codex]  # 可选：支持的客户端
 
 **必需字段：**
 - `name`：kebab-case（小写-连字符），与目录名完全一致，≤100 字符，单行
-- `description`：≤200 字符（验证器上限 300），包含「做什么 + 何时触发」，触发关键词前置；单行
+- `description`：≤1024 字符（验证器上限 1024），包含「做什么 + 何时触发」，触发关键词前置；单行
 - `category`：见下方分类列表
 - `risk`：`none` / `safe` / `critical` / `offensive` / `unknown` 之一（新技能避免 `unknown`）
 - `source`：`self`（原创）/ 社区 / 官方 / URL。`self` 表示你是原始作者
@@ -81,7 +81,7 @@ tools: [claude, opencode, codex]  # 可选：支持的客户端
 
 **元数据：**
 - [ ] frontmatter 是有效 YAML，`name` 小写-连字符且与目录名一致
-- [ ] `description` ≤200 字符，包含做什么 + 何时触发
+- [ ] `description` ≤1024 字符，包含做什么 + 何时触发
 - [ ] `risk` / `category` / `source` / `date_added` 已声明
 
 **内容质量：**
