@@ -15,10 +15,10 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 ├── agent-creator/            # 独立技能「代理生产器」（同构，闭环：创建→验证→测试→安装）
 │   └── AGENTS.md / SKILL.md
 ├── tools/docs/lifecycle.md   # 安装/生命周期通用入口
-├── skills/               # 已验证技能库（回馈目标；现有 pr-summarizer）
-├── agents/               # 已验证代理库（回馈目标；现有 code-reviewer）
+├── skills/               # 已验证技能库（分类化：git/pr-summarizer、development/code-review-skill；生成器内部另有 examples/）
+├── agents/               # 已验证代理库（分类化：ue-game-studio×25、academic×5、code-quality×2，共 32 个；无「留顶层」）
 ├── tools/scripts/        # 四端安装器 + 生命周期 + 能力目录生成器（manifest-driven）
-├── tests/                # pytest（22 用例，覆盖验证器/路径矩阵/生成器）
+├── tests/                # pytest（25 用例，覆盖验证器/路径矩阵/生成器/quant eval）
 ├── .github/workflows/validate.yml  # CI：双验证器 --strict + pytest + 文档引用 + 目录同步
 └── docs/                 # DEVELOPMENT-PLAN.md（开发计划）、HANDOFF.md（本文件）、AGENTS-AUDIT.md（代理审计）、SKILLS-AUDIT.md（技能审计）、ON-DEMAND-INSTALL.md（按需安装方案）
 ```
@@ -37,9 +37,10 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
   - `aas` = sickn33/agentic-awesome-skills（2107，官方索引）
   - `addy` = addyosmani/agent-skills（25，目录扫描）
 - 脚本：`search_index.py`（检索/--source/stats）、`build_index.py`（多源/增量）、`compare_skills.py`（质量6维+结构4维评分）、`create_skill.py`（脚手架）、`validate_skills.py`（严格验证）、`run_trigger_tests.py`（触发启发式）
-- `references/`：template/anatomy/quality-bar/index/comparison
-- `examples/`：6 个上游学习样本（MIT，验证豁免）；`evolutions/`：对比学习记录（pr-summarizer + 2026-09-03 借鉴 Anthropic 官方量化 eval 引擎）
+- `references/`：template/anatomy/quality-bar/index/comparison/**skill-writing-guide**（写作规律：TDD 化·表述匹配失败类型·防借口·措辞微测——反哺自 obra/superpowers writing-skills）
+- `examples/`：6 个上游学习样本（MIT，验证豁免）；`evolutions/`：对比学习记录（pr-summarizer、2026-09-03 借鉴 Anthropic 官方量化 eval 引擎、code-review-skill 导入、**2026-09-03 采纳 superpowers writing-skills 方法论**）
 - 量化 eval 引擎（移植自 Anthropic claude-plugins-official）：`scripts/run_eval.py`（heuristic/cli 双模式）、`run_loop.py`（description 自动优化，train/test 60/40 防过拟合）、`aggregate_benchmark.py`（benchmark.json+md，纯 stdlib）、`references/benchmark-schema.md`（schema）——全部客户端无关，默认 heuristic 无需外部 CLI
+- **description 上限 1024**：验证器/模板/质量条/参考全部统一（触发场景优先 + 一句能力定位，禁流程摘要——E 规律）；`description = 何时用不是做什么`
 - `opencode.json` 已注册 `skills.paths = ["skill-creator", "agent-creator"]`
 
 ### agent-creator（代理生产器）
@@ -80,7 +81,7 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
   3. 参考外部仓库的代理/技能必须在对应审计文件中**标注数据来源**
   4. 分类目录必入：**按功能归入分类文件夹，分类不存在则创建；无「留顶层」例外**（2026-09-03 起 code-reviewer / code-simplifier 已迁入 `agents/code-quality/`）
 - `docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md`：数据来源与入库合规的**唯一记录入口**；新增/迁移/改进/整改能力后必须同步更新
-- **审计现状**：**32 个代理全部合规**——code-reviewer 创建时经 agent-creator；academic×5 + ue-game-studio×25 于 2026-09-03 逐一补走 agent-creator 对比择优（上游 agency/ccgs/agency-zh 比对，结论自建更优/持平），证据见 `agent-creator/evolutions/2026-09-03-compare-migrated-ue-agents.md`；code-simplifier 于同日经官方仓库导入+对比（0.86 vs 0.48）转合规；pr-summarizer + code-review-skill 均合规
+- **审计现状**：**32 个代理全部合规**——code-reviewer 创建时经 agent-creator；academic×5 + ue-game-studio×25 于 2026-09-03 逐一补走 agent-creator 对比择优（上游 agency/ccgs/agency-zh 比对，结论自建更优/持平），证据见 `agent-creator/evolutions/2026-09-03-compare-migrated-ue-agents.md`；code-simplifier 于同日经官方仓库导入+对比（0.86 vs 0.48）转合规；pr-summarizer + code-review-skill 均合规（2 技能）
 
 ### 文档质量
 - 根 `AGENTS.md` 为总编排；`skill-creator/AGENTS.md` / `agent-creator/AGENTS.md` 为各自独立技能引导（随技能分发）
@@ -130,7 +131,7 @@ python tools/scripts/uninstall_skill.py <名>
 python tools/scripts/rollback_skill.py <名>
 
 # 测试/CI 等价
-python -m pytest tests/ -q          # 22 用例
+python -m pytest tests/ -q          # 25 用例
 python tools/scripts/check_docs_refs.py   # 文档引用完整性（exit 0）
 python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 ```
@@ -149,13 +150,18 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | CI（strict 验证 + pytest + 文档检查 + 目录同步） | ✅ 已配置 |
 | 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 生产器独立化（闭环 3 步，不含编排）+ 编排收敛到根 AGENTS（A vs B 谁优用谁） |
 | agent-creator evolutions | ✅ 首个真实记录：`2026-09-03-compare-migrated-ue-agents.md`（30 个迁移代理批量对比，全部自建更优/持平） |
-| skill-creator evolutions | ✅ 反馈闭环记录：`2026-09-03-borrow-upstream-quant-eval.md`（上游 Anthropic 官方更优维度 → 反哺量化 eval 引擎） |
+| skill-creator evolutions | ✅ 反馈闭环记录：`2026-09-03-borrow-upstream-quant-eval.md`（Anthropic 官方量化 eval）、`2026-09-03-import-code-review-skill.md`、`2026-09-03-adopt-superpowers-writing-skills.md` |
 | **量化 eval 引擎（移植自 Anthropic 官方）** | ✅ `scripts/run_eval.py`（heuristic/cli）、`run_loop.py`（train/test 60/40 优化）、`aggregate_benchmark.py`（benchmark.json+md）、`references/benchmark-schema.md`；四端通用、默认 heuristic 无需 CLI |
 | 文档引用一致性检查器 | ✅ 零误报 |
-| **入库准入规则 + 审计文件（AGENTS/SKILLS-AUDIT）** | ✅ 根 AGENTS 已加三条规则；`docs/AGENTS-AUDIT.md`（31 代理）+ `docs/SKILLS-AUDIT.md`（pr-summarizer）已建 |
+| **入库准入规则 + 审计文件（AGENTS/SKILLS-AUDIT）** | ✅ 根 AGENTS 已加四条规则（+提交前收尾交接）；`docs/AGENTS-AUDIT.md`（32 代理）+ `docs/SKILLS-AUDIT.md`（2 技能）已建 |
 | **30 个 UEGameStudio 迁移代理补走 agent-creator** | ✅ 已完成：academic×5 + ue-game-studio×25 逐一对比择优（上游 agency/ccgs/agency-zh）→ 结论自建更优/持平 → 审计转合规 |
+| **code-review-skill 导入（awesome-skills，MIT）** | ✅ 2026-09-03 整目录导入 `skills/development/code-review-skill/`（26 语言指南+cross-cutting+assets+scripts+LICENSE），适配本地 schema + description ≤1024；审计登记；对比 0.96 vs 0.71 采纳适配版 |
+| **code-simplifier 导入（anthropics/claude-plugins-official）** | ✅ 2026-09-03 导入适配 `agents/code-quality/code-simplifier/`（官方方法论重组本地 7 章节）；审计登记；对比 0.86 vs 0.48 采纳适配版 |
+| **规则 4 收紧：分类目录必入（无留顶层例外）** | ✅ AGENTS.md 规则 4 去例外；code-reviewer/code-simplifier 迁入 `agents/code-quality/`、pr-summarizer 迁入 `skills/git/`；`agents/`/`skills/` 根目录无散置能力 |
+| **skill-creator 反哺 superpowers writing-skills** | ✅ 2026-09-03 完整采纳：新增 `references/skill-writing-guide.md`（先失败后写/表述匹配失败类型/防借口/措辞微测）+ SKILL.md 阶段 6 纪律块 + description 触发面规范 + 禁 `@` 引用；quality-bar 检查项 7 |
+| **description 上限 1024** | ✅ validate_skills/template/quality-bar/skill-template/skill-anatomy 统一；code-review-skill 描述重写为完整触发词 |
 | **deepseek-harness 路径实测** | ⚠️ 未做（需真实环境；`DEEPSEEK_HARNESS_ROOT` 兜底） |
-| **opencode 真实安装待重启验证** | ⚠️ pr-summarizer/code-reviewer 已 install，需重启客户端确认加载 |
+| **opencode 真实安装待重启验证** | ⚠️ code-reviewer 已 install，需重启客户端确认加载 |
 | **UEGameStudio 30 代理运行时验证** | ⚠️ 全为 `static-verified`，需在真实 UE Editor / 目标项目试跑后逐档升 `runtime-verified`，并同步 CATALOG |
 | **上游索引更新频率** | 建议定期用 `--source <单源>` 手动同步（技能/代理各自脚本） |
 | **新技能/代理持续沉淀** | 按需用本仓库流程创建后回馈到 skills/、agents/（重跑 build_catalog.py） |

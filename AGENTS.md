@@ -56,6 +56,23 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 2. **调用生成器产出 B**：把需求交给 skill-creator 执行其内部闭环（按需求创建 → 检索上游对比 → 产出「自建/上游」最优 B，上游更优则记录 `evolutions/` 优化生成器）。命令按 `skill-creator/AGENTS.md` / `SKILL.md` 执行。
 3. **对比 A 与 B** → **谁优用谁**（最优按「分类目录必入」规则放入 `skills/<分类>/<name>/`，供验证/安装/回馈）。
 
+## 提交前收尾与交接（硬性约束）
+
+本仓库用 `docs/HANDOFF.md` 做会话交接：**每次 git 提交前必须先「收尾 + 交接」**，确保下一个会话只读 HANDOFF 即可接手。三步：
+
+1. **收尾（防回归全跑）**：失败先修复再继续：
+   ```bash
+   python -m pytest tests/ -q
+   python tools/scripts/check_docs_refs.py
+   python skill-creator/scripts/validate_skills.py --strict --dir skills
+   python skill-creator/scripts/validate_skills.py --strict --dir skill-creator
+   python agent-creator/scripts/validate_agents.py --strict --dir agents
+   python tools/scripts/build_catalog.py --check
+   ```
+   改动涉及能力时，同步审计文件（`docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md`）并重建 CATALOG（新增/删除能力后必跑 `python tools/scripts/build_catalog.py`）。
+2. **交接（更新 `docs/HANDOFF.md`）**：把本次改动同步进交接文件——刷新基线（`git log --oneline -3`）、已交付/未完成状态表、审计计数、能力清单；若改动未触及能力或文档状态（如仅占位文件），可只刷新基线行、不重写全表。
+3. **确认后提交**：1/2 就绪后才 commit；提交后向用户输出「新会话交接提示语」（HANDOFF 开场提示的完整文本），供用户复制到下一个会话。
+
 ## 生命周期操作（维护）
 
 ```bash
@@ -85,6 +102,7 @@ python tools/scripts/rollback_agent.py <代理名>
 - `tools/scripts/build_catalog.py` — 能力目录生成器
 - `tools/docs/lifecycle.md` — 生命周期操作详解
 - `docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md` — 代理/技能审计（数据来源 + 入库合规唯一记录入口）
+- `docs/HANDOFF.md` — 会话交接文件（提交前收尾/交接的落地对象；新会话开场提示）
 - `docs/ON-DEMAND-INSTALL.md` — 按需安装与能力目录方案
 
 ## 客户端接入方式
@@ -102,4 +120,5 @@ python tools/scripts/rollback_agent.py <代理名>
 - **生成必调 / 谁优用谁**：创建/改进需求无论本地有无，都调用对应生成器，生成结果与本地现有对比取最优
 - **引导不自动**：本文件只指引路径，不代替用户执行安装/提交等副作用操作；是否调用生成器由本层判定
 - **验证优先**：未经 `validate_skills.py` / `validate_agents.py` 验证的能力不安装
+- **提交前收尾交接**：每次 git 提交前先跑防回归收尾 + 更新 `docs/HANDOFF.md` 交接新会话（见「提交前收尾与交接」节）
 - **回馈闭环**：每次"上游更优"的对比都是学习机会（`evolutions/`）
