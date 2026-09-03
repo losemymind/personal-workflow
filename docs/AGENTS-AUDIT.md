@@ -1,7 +1,7 @@
 # PersonalWorkflow 代理审计（AGENTS-AUDIT）
 
 > 用途：审计 `agents/` 库中每个代理的**数据来源** 与 **入库流程合规性**。事实源 = 各 `AGENT.md` frontmatter + git 历史 + 迁移记录。
-> 依据：根 `AGENTS.md`「入库准入规则」第 1、3 条（规则 1：代理入库**无论参考本地文件还是远程仓库，必须经过 agent-creator**；规则 3：**参考外部仓库的代理必须在审计文件中标注数据来源**）。
+> 依据：根 `AGENTS.md`「入库准入规则」第 1、3、4 条（规则 1：代理入库**无论参考本地文件还是远程仓库，必须经过 agent-creator**；规则 3：**参考外部仓库的代理必须在审计文件中标注数据来源**；规则 4：**代理按功能归入分类目录 `agents/<顶层分类>/<name>/`，分类不存在则创建；无「留顶层」例外**）。
 > 本次审计日期：2026-09-03 ｜ 最近迁移提交：`07a604c`（重组为 ue-game-studio 安装包）
 > 2026-09-03 更新：academic×5 + ue-game-studio×25 已逐一执行 agent-creator 对比择优（上游三源比对），结论全部为「自建（迁移版）更优/持平」→ **已转合规**。对比证据：`agent-creator/evolutions/2026-09-03-compare-migrated-ue-agents.md`。
 
@@ -9,33 +9,37 @@
 
 | 指标 | 数值 |
 |---|---|
-| 代理总数 | 31 |
+| 代理总数 | 32 |
 | 自建（无外部引用） | 1（code-reviewer） |
-| 外部来源 | 30（外部本地仓库 UEGameStudio 迁移） |
-| 远程仓库来源 | 0 |
-| 经 agent-creator 生成流程 | 31（code-reviewer 创建时走；30 个迁移代理审计期补走对比择优）✅ |
+| 外部来源 | 31（30 外部本地仓库 UEGameStudio 迁移 + 1 远程官方仓库导入） |
+| 远程仓库来源 | 1（anthropics/claude-plugins-official） |
+| 经 agent-creator 生成流程 | 32（code-reviewer 创建时；30 走迁移审计对比择优；code-simplifier 阶段 0+5.5 对比后导入）✅ |
 | 未走 agent-creator | 0 |
 | `runtime-verified` | 1（code-reviewer） |
-| `static-verified` | 30 |
+| `static-verified` | 31 |
 
 **审计结论**：
-- ✅ **全部 31 个代理合规（规则 1）**：code-reviewer 创建时经 agent-creator；academic×5 + ue-game-studio×25 在本次审计中逐一执行 agent-creator 阶段 0（检索上游）/ 5.5（对比择优），结论为自建（迁移版）更优或持平、上游候选未取代 → 全部转合规。
-- ✅ **规则 3 达标**：本文件已为全部 30 个外部代理标注数据来源。
+- ✅ **全部 32 个代理合规（规则 1）**：code-reviewer 创建时经 agent-creator；academic×5 + ue-game-studio×25 在本次审计中逐一执行 agent-creator 阶段 0（检索上游）/ 5.5（对比择优），结论为自建（迁移版）更优或持平、上游候选未取代；**code-simplifier**（2026-09-03）本地无候选 A → 检索上游索引无命中 → 按用户指定从 `anthropics/claude-plugins-official` 导入并适配，对比 0.86 vs 0.48 采纳适配版 → 转合规。
+- ✅ **规则 3 达标**：本文件已为全部 31 个外部代理标注数据来源。
 
 ## 2. 数据来源汇总
 
 | 来源类型 | 来源详情 | 涉及代理 |
 |---|---|---|
 | 外部本地仓库 | `E:\GitHub\UEGameStudio\UEGameStudio\agents`（UEGameStudio 项目组，30 代理，7 层） | 全部 30 个迁移代理 |
+| 远程仓库（官方导入） | `anthropics/claude-plugins-official` → `plugins/code-simplifier/agents/code-simplifier.md`（2026-09-03 按用户指定导入并适配） | code-simplifier |
 | 自建 | 本仓库创建（agent-creator 流程） | code-reviewer |
 
-> 说明：UEGameStudio 为**本机本地仓库**（非远程 Git 仓库）；迁移时包内文件已去除对源仓库的引用并改写为自包含描述（见 `agents/ue-game-studio/README.md`）。当前库内**无远程仓库来源**的代理。
+> 说明：UEGameStudio 为**本机本地仓库**（非远程 Git 仓库）；迁移时包内文件已去除对源仓库的引用并改写为自包含描述（见 `agents/ue-game-studio/README.md`）。code-simplifier 为库内首个**远程官方仓库**来源代理。
 
-## 3. 顶层通用代理
+## 3. 分组：code-quality（代码质量通用代理，2 个）
+
+> 2026-09-03 更新：code-reviewer / code-simplifier 按规则 4 迁入新增分类 `agents/code-quality/`（无「留顶层」例外）。
 
 | 代理名 | 位置 | mode | maturity | 数据来源 | 经 agent-creator | 结论 |
 |---|---|---|---|---|---|---|
-| code-reviewer | `agents/code-reviewer/AGENT.md` | subagent | runtime-verified | 自建（本仓库） | ✅ | ✅ 合规 |
+| code-reviewer | `agents/code-quality/code-reviewer/AGENT.md` | subagent | runtime-verified | 自建（本仓库） | ✅ | ✅ 合规 |
+| code-simplifier | `agents/code-quality/code-simplifier/AGENT.md` | subagent | static-verified | 远程 `anthropics/claude-plugins-official`（code-simplifier.md）导入适配 | ✅ | ✅ 合规（2026-09-03；对比 0.86 vs 0.48 采纳适配版）|
 
 ## 4. 分组：academic（公共研究代理，5 个）
 

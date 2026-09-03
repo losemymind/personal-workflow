@@ -5,18 +5,6 @@
 > 检索：让 LLM 读本文件匹配需求 → 命中即给出 `install` 命令，人类确认后执行。
 
 
-## 顶层通用代理
-
-## code-reviewer
-
-| mode | subagent |
-| version | 0.1.0 |
-| maturity | runtime-verified |
-| tags | [code-review, quality, agent] |
-| install | `python tools/scripts/install_agent.py agents/code-reviewer` |
-
-**用途**：常驻代码审查代理：对 PR/diff 做多轴质量审查（正确性/可维护性/性能/安全），分级输出问题清单与修改建议。当用户要求「审查代码」「review 我的改动」「合并前把关」时被调用。只读角色，无编辑权限。
-
 ## 分组：academic
 
 _共 5 个代理，安装路径位于 `agents/academic/` 下。_
@@ -70,6 +58,30 @@ _共 5 个代理，安装路径位于 `agents/academic/` 下。_
 | install | `python tools/scripts/install_agent.py agents/academic/psychologist` |
 
 **用途**：分析虚构角色的人格、动机、信念、压力反应、发展轨迹、群体行为与关系动力；在构建心理可信的角色、冲突和成长弧时使用
+
+## 分组：code-quality
+
+_共 2 个代理，安装路径位于 `agents/code-quality/` 下。_
+
+## code-reviewer
+
+| mode | subagent |
+| version | 0.1.0 |
+| maturity | runtime-verified |
+| tags | [code-review, quality, agent] |
+| install | `python tools/scripts/install_agent.py agents/code-quality/code-reviewer` |
+
+**用途**：常驻代码审查代理：对 PR/diff 做多轴质量审查（正确性/可维护性/性能/安全），分级输出问题清单与修改建议。当用户要求「审查代码」「review 我的改动」「合并前把关」时被调用。只读角色，无编辑权限。
+
+## code-simplifier
+
+| mode | subagent |
+| version | 0.1.0 |
+| maturity | static-verified |
+| tags | [code-simplify, refactor, code-quality] |
+| install | `python tools/scripts/install_agent.py agents/code-quality/code-simplifier` |
+
+**用途**：简化重构最近修改的代码：提升清晰度、一致性、可维护性，保持功能完全不变、聚焦本次会话刚改动的代码（除非用户指定更广范围）。当用户要求简化代码、重构、清理冗余、改善可读性，或代码改动后希望自动精炼时被调用。
 
 ## 分组：ue-game-studio
 
