@@ -91,7 +91,7 @@ python tools/scripts/install_skill.py [--client <claude|opencode|codex|deepseek>
 - 在本技能随附的仓库内运行：`skill-creator/references/xxx.md`、`skill-creator/scripts/xxx.py`。
 - 安装到客户端后：以实际技能目录为准（如 `~/.config/opencode/skills/skill-creator/...`）。
 
-读取规则：references 文档**按需读取**；需要字段/分类时读 `references/skill-template.md`，结构规范读 `references/skill-anatomy.md`，质量标准读 `references/quality-bar.md`，索引细节读 `references/skill-index.md`，对比评分读 `references/skill-comparison.md`。
+读取规则：references 文档**按需读取**；需要字段/分类时读 `references/skill-template.md`，结构规范读 `references/skill-anatomy.md`，质量标准读 `references/quality-bar.md`，写作规律（TDD 化/表述匹配失败类型/防借口）读 `references/skill-writing-guide.md`，索引细节读 `references/skill-index.md`，对比评分读 `references/skill-comparison.md`。
 
 ## 资源导览（按需读取）
 
@@ -101,6 +101,7 @@ python tools/scripts/install_skill.py [--client <claude|opencode|codex|deepseek>
 | `references/skill-template.md` | 需要字段/分类/风险级别细节时 |
 | `references/skill-anatomy.md` | 需要结构规范/渐进式披露时 |
 | `references/quality-bar.md` | 需要质量标准/验证器检查项时 |
+| `references/skill-writing-guide.md` | 编写/改进技能正文时：写作规律（TDD 化、表述匹配失败类型、防借口、措辞微测、description 触发面） |
 | `references/skill-index.md` | 需要索引构建/检索/增量同步说明时 |
 | `references/skill-comparison.md` | 进行对比择优时 |
 | `references/benchmark-schema.md` | 做量化基准（run_eval / run_loop / aggregate_benchmark 的 JSON 结构）时 |

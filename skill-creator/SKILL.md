@@ -69,7 +69,7 @@ skill-creator/
 - **在本仓库内运行**：真实路径为 `skill-creator/references/xxx.md`、`skill-creator/scripts/validate_skills.py`、`skill-creator/templates/SKILL.template.md`。
 - **安装到客户端后**：真实路径为客户端技能目录（如 `~/.config/opencode/skills/skill-creator/references/xxx.md`、`~/.claude/skills/skill-creator/...`、`~/.codex/skills/skill-creator/...`），以实际安装位置为准。
 
-读取规则：references 文档**按需读取**（渐进式披露），需要字段/分类细节时读 `references/skill-template.md`，需要结构规范时读 `references/skill-anatomy.md`，需要质量标准时读 `references/quality-bar.md`；不要一次性全部注入。
+读取规则：references 文档**按需读取**（渐进式披露），需要字段/分类细节时读 `references/skill-template.md`，需要结构规范时读 `references/skill-anatomy.md`，需要质量标准时读 `references/quality-bar.md`，需要写作规律（TDD 化/表述匹配失败类型/防借口/微测）时读 `references/skill-writing-guide.md`；不要一次性全部注入。
 
 ## 核心理念
 
@@ -101,11 +101,15 @@ skill-creator/
 
 `name`/`description` 是技能的唯一门面，直接决定是否触发：
 - `name`：小写-连字符，与目录名完全一致，≤100 字符，稳定不变
-- `description`：一句话，包含**做什么 + 何时用**，前部加载具体触发关键词（文件名、领域、工具、用户惯用语）。实测 LLM 倾向**欠触发**，描述可稍「主动」——列举会触发它的用户说法，即使没字面提到技能名。
+- `description`：触发场景优先——以「何时用/Use when」开头，前部加载具体触发关键词（文件名、领域、工具、用户惯用语）；可保留一句能力定位，但**不写执行步骤/流程阶段摘要**（实证：总结流程的描述会让 agent 跳过正文走捷径）。实测 LLM 倾向**欠触发**，描述可稍「主动」——列举会触发它的用户说法，即使没字面提到技能名。
 
 ### 迭代验证循环
 
 技能是迭代出来的，不是一次写成的：**草案 → 测试 → 评审 → 改进 → 重跑**，直到用户满意或反馈为空。
+
+### 先失败后写 + 表述匹配失败类型（TDD 化）
+
+技能写作是对**过程文档的 TDD**：先在无技能状态跑真实场景看基线失败（verbatim 记录 agent 借口），再写**只针对这些失败**的最小正文，重测补漏直到无法绕开——**无「失败先例」不写技能**。且指导措辞的形式必须**匹配失败类型**（违规→禁止+借口表；形状错→正面配方；漏元素→模板 REQUIRED 槽；条件行为→可观察谓词）；实证显示禁止清单会反噬「输出形状错」类问题。防借口、措辞微测、类型取舍与 Token 预算等完整规律见 `references/skill-writing-guide.md`。
 
 ### 无意外原则（Lack of Surprise）
 
@@ -132,7 +136,7 @@ SKILL.md 顶部用 `---` 包裹 YAML frontmatter：
 ```yaml
 ---
 name: <skill-name>                 # 必需：小写-连字符，与目录名完全一致
-description: "..."                 # 必需：一句话说明 + 触发场景，≤1024 字符
+description: "..."                 # 必需：触发场景优先 + 一句能力定位（不写步骤流程摘要），≤1024 字符
 category: <category>               # 必需：见下方分类值
 risk: <none|safe|critical|offensive|unknown>  # 必需
 source: <self|community|official|URL>         # self 表示原创
@@ -165,7 +169,7 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 ## 工作原理          # 步骤化执行流程（技能核心）
 ## 示例             # 至少 1 个可立即复制使用的代码块/交互示例
 ## 最佳实践          # ✅ 要这样做 / ❌ 避免什么
-## 相关技能          # @other-skill
+## 相关技能          # 纯技能名 + 何时用；禁止 @ 语法（force-load 烧上下文）
 ## 常见问题          # 故障排查
 ## 限制和注意事项     # 已知边界与做不到的事
 ## 安全与安全说明     # 涉及命令/安装/权限/高风险时才需要
@@ -304,6 +308,8 @@ python skill-creator/scripts/compare_skills.py <自建目录> <上游目录> --a
 
 ### 阶段 6：测试与迭代
 
+> **纪律（Iron Law）**：基线必须先于写作——**无技能状态的失败观察在前，写技能在后**（RED→GREEN→REFACTOR）。如果技能已写好才想起基线，回到正文会写前先跑一遍无技能场景。指导措辞的**形式须匹配失败类型**，防借口/微测/正反对照见 `references/skill-writing-guide.md`。
+
 提出 2-3 个**真实用户会说的话**作为测试提示词，请用户确认后运行：
 
 - **有技能** 和 **无技能（基线）** 两组对比运行同一提示词，记录输出、耗时与 token。
@@ -348,7 +354,7 @@ python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --
 
 - 按「多客户端安装指引」把技能复制到目标客户端的 skills 目录。
 - 重启客户端后用真实小任务触发一次，确认技能被加载、按指令执行。
-- 经验证、可复用的技能按质量检查清单归档到仓库 `skills/<name>/`。
+- 经验证、可复用的技能按质量检查清单归档到仓库 `skills/<分类>/<name>/`（规则 4：分类目录必入，无「留顶层」例外）。
 
 ## 质量检查清单
 
@@ -356,7 +362,7 @@ python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --
 
 **元数据：**
 - [ ] frontmatter 是有效 YAML，`name` 小写-连字符且与目录一致
-- [ ] `description` ≤1024 字符，包含做什么 + 何时触发
+- [ ] `description` ≤1024 字符，触发场景优先 + 一句能力定位，**无步骤流程摘要**（E：说什么场景触发，不替正文写短版）
 - [ ] `risk` / `category` / `source` / `date_added` 已声明
 
 **内容质量：**
@@ -364,6 +370,7 @@ python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --
 - [ ] 有明确的「何时使用此技能」触发说明
 - [ ] 至少有 1 个可复制粘贴的示例
 - [ ] 列出了限制和注意事项（已知边缘情况 / 做不到的事）
+- [ ] 指导措辞的形式与基线失败类型匹配（禁止 vs 配方 vs REQUIRED 槽 vs 条件谓词；见 `references/skill-writing-guide.md`）
 - [ ] 技术准确性已验证，无拼写错误
 
 **可用性：**
@@ -371,6 +378,8 @@ python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --
 - [ ] 解决一个真实问题，而非空泛建议
 - [ ] 不依赖超窄的具体例证（避免过拟合到测试用例）
 - [ ] 涉及命令/安装的内容通过安全审查（无 `curl ... | bash` 等管道，无明文密钥示例）
+- [ ] 若为纪律型技能：已含防合理化设计（借口表/红旗清单/封漏洞）
+- [ ] 跨技能引用不用 `@` 语法（用纯技能名 + 显式 REQUIRED 标记）
 
 ## 安全护栏
 

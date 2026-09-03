@@ -29,7 +29,7 @@ skills/
 ### 必需字段
 
 - `name`：小写-连字符，**必须与文件夹名称完全一致**。示例：`stripe-integration`
-- `description`：一句话摘要 + 触发场景，≤1024 字符（验证器上限 1024），前端加载触发关键词
+- `description`：触发场景优先 + 一句能力定位，≤1024 字符（验证器上限 1024），前端加载触发关键词，**不写步骤/流程摘要**（实证原因见 `references/skill-writing-guide.md` §6）
 - `risk`：`none` / `safe` / `critical` / `offensive` / `unknown`
 - `source`：来源归属，`self` 表示原创
 
@@ -47,7 +47,7 @@ skills/
 4. **工作原理** — 步骤化核心指令
 5. **示例** — 至少 1 个可立即复制的代码块（质量门槛要求章节）
 6. **最佳实践** — ✅ 这样做 / ❌ 避免什么
-7. **相关技能** — `@other-skill` 引用
+7. **相关技能** — 纯技能名 + 何时用它（**禁止 `@` 语法**：force-load 烧上下文，见 `references/skill-writing-guide.md` §6）
 8. **常见问题** — 故障排查
 9. **限制和注意事项** — 已知边界与做不到的事（质量门槛要求章节）
 10. **安全与安全说明** — 涉及命令/网络/攻击性内容时必加
@@ -112,11 +112,13 @@ skills/
 
 ### 交叉引用（工作流串联）
 
+不用 `@`（会 force-load 整份技能、烧上下文）。用纯技能名 + 显式要求标记，让调用方按需加载：
+
 ```markdown
 ## 相关工作流
-1. 先用 `@brainstorming` 做设计
-2. 再用 `@writing-plans` 做规划
-3. 最后用 `@test-driven-development` 实现
+1. 先做设计——**REQUIRED:** 先读 `brainstorming` 技能
+2. 再规划——**REQUIRED:** 先读 `writing-plans` 技能
+3. 最后实现——**REQUIRED:** 遵循 `test-driven-development` 技能
 ```
 
 ## 从现有技能学习

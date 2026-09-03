@@ -7,7 +7,7 @@
 ```yaml
 ---
 name: react-patterns              # 必需：小写-连字符，与目录名完全一致
-description: "React 组件设计与状态管理最佳实践。当用户请求 React 组件、hooks 用法或状态管理方案时使用。"
+description: "当用户要求设计 React 组件、实现 hooks 或选择状态管理方案时使用。覆盖组件模式与状态管理最佳实践。"
 category: frontend                # 必需：见下方分类列表
 risk: safe                        # 必需：见下方风险级别定义
 source: self                      # 必需：self / 社区 / 官方 / URL
@@ -22,7 +22,7 @@ tools: [claude, opencode, codex]  # 可选：支持的客户端
 
 **必需字段：**
 - `name`：kebab-case（小写-连字符），与目录名完全一致，≤100 字符，单行
-- `description`：≤1024 字符（验证器上限 1024），包含「做什么 + 何时触发」，触发关键词前置；单行
+- `description`：≤1024 字符（验证器上限 1024），**触发场景优先**（「何时用/Use when」开头 + 触发关键词前置）+ 一句能力定位；**不写执行步骤/流程摘要**（写法的实证原因见 `skill-writing-guide.md` §6）；单行
 - `category`：见下方分类列表
 - `risk`：`none` / `safe` / `critical` / `offensive` / `unknown` 之一（新技能避免 `unknown`）
 - `source`：`self`（原创）/ 社区 / 官方 / URL。`self` 表示你是原始作者
@@ -81,7 +81,7 @@ tools: [claude, opencode, codex]  # 可选：支持的客户端
 
 **元数据：**
 - [ ] frontmatter 是有效 YAML，`name` 小写-连字符且与目录名一致
-- [ ] `description` ≤1024 字符，包含做什么 + 何时触发
+- [ ] `description` ≤1024 字符，触发场景优先 + 一句能力定位，无步骤流程摘要
 - [ ] `risk` / `category` / `source` / `date_added` 已声明
 
 **内容质量：**
@@ -89,6 +89,7 @@ tools: [claude, opencode, codex]  # 可选：支持的客户端
 - [ ] 有明确的「何时使用此技能」触发说明
 - [ ] 至少有 1 个可复制粘贴的示例
 - [ ] 列出了限制和注意事项（已知边缘情况 / 做不到的事）
+- [ ] 表述形式与基线失败类型匹配（见 `references/skill-writing-guide.md` §2）
 - [ ] 技术准确性已验证，无拼写错误
 
 **可用性：**
@@ -100,6 +101,6 @@ tools: [claude, opencode, codex]  # 可选：支持的客户端
 ## 提交指南
 
 - 目录名 = 技能名（小写-连字符），文件名固定为 `SKILL.md`
-- 目录结构：`<skill-name>/SKILL.md`（必需）+ `examples/` `scripts/` `templates/` `references/`（可选）
+- 目录结构：按功能归入分类 `<分类>/<skill-name>/SKILL.md`（规则 4；分类不存在先创建）+ `examples/` `scripts/` `templates/` `references/`（可选）
 - 运行验证：`python skill-creator/scripts/validate_skills.py`（或 `--strict`）
 - 验证通过 + 真实任务试跑通过后才提交到仓库 `skills/`

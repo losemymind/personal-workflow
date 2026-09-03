@@ -1,6 +1,6 @@
 ---
 name: your-skill-name
-description: "一句话说明技能做什么以及何时触发（≤1024 字符）：这个技能能完成什么，当用户提到哪些场景/说法时应该使用。前端加载具体的触发关键词，用第三人称。"
+description: "触发场景优先（≤1024 字符）：以「当用户…时使用 / Use when…」开头，写清会触发本技能的具体说法/症状/文件名；可带一句能力定位，但不写执行步骤或流程摘要。前端加载触发关键词，第三人称。"
 category: productivity
 risk: safe
 source: self
@@ -55,7 +55,7 @@ tools: [claude, opencode, codex, deepseek]
 
 ## 相关技能
 
-- `@other-skill` — 什么时候用它更合适
+- `other-skill` — 什么时候用它更合适（用纯技能名；禁止 `@` 语法）
 
 ## 常见问题
 

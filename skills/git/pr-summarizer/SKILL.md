@@ -127,7 +127,7 @@ git cherry-pick <commits-for-part-1>
 
 ## 相关技能
 
-- `@skill-creator` — 创建/改进本类工作流技能
+- `skill-creator` — 创建/改进本类工作流技能（用 `skill-creator` 生成器）
 - `code-reviewer` 代理 — 本技能产出可交代理复检（代理专注多轴质量审查）
 
 ## 常见问题

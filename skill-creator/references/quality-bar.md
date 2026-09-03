@@ -9,11 +9,18 @@
 `SKILL.md` 前置元数据必须是有效 YAML，并包含：
 
 - `name`：kebab-case，与文件夹名完全一致（长度 <64）
-- `description`：≤1024 字符（验证器上限 1024），清晰的价值主张 + 触发场景
+- `description`：≤1024 字符（验证器上限 1024），**触发场景优先 + 一句能力定位**，不写执行步骤/流程阶段摘要（触发面规律见 `skill-writing-guide.md` §6）
 - `risk`：`none` / `safe` / `critical` / `offensive` / `unknown` 之一
 - `source`：来源归属（原创用 `self`）
 - `version`：`x.y.z` 语义化格式（推荐，生命周期记账；缺失仅提示）
 - `category` / `date_added`：推荐（验证器给出提示）
+
+### 7. 写作规律（人工；见 `references/skill-writing-guide.md`）
+
+- **先失败后写（Iron Law）**：无技能状态的基线失败观察在写作之前
+- **表述形式匹配失败类型**：禁止 vs 正面配方 vs REQUIRED 槽 vs 条件谓词，选错适得其反
+- **纪律型技能防合理化**：借口表 / 红旗清单 / 封漏洞 / 字即神
+- **跨技能引用不用 `@` 语法**（force-load 烧上下文），用显式 REQUIRED 标记
 
 ### 2. 清晰的触发条件（自动）
 
