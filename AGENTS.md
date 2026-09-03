@@ -39,11 +39,12 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 
 ### 入库准入规则（硬性约束）
 
-任何能力进入 `skills/` 或 `agents/` 库，必须同时满足以下三条（违反视为不合规，需整改）：
+任何能力进入 `skills/` 或 `agents/` 库，必须同时满足以下四条（违反视为不合规，需整改）：
 
 1. **代理必经 agent-creator**：放入本库 `agents/` 的代理，**无论参考自本地其他文件还是远程仓库**，入库前都必须经过 `agent-creator`（创建/改进 → 验证 → 对比择优），并在 `docs/AGENTS-AUDIT.md` 登记。
 2. **技能必经 skill-creator**：放入本库 `skills/` 的技能，**无论参考自本地其他文件还是远程仓库**，入库前都必须经过 `skill-creator`（创建/改进 → 检索上游对比 → 验证），并在 `docs/SKILLS-AUDIT.md` 登记。
 3. **外部来源必标注数据来源**：本仓库 `agents/` 与 `skills/` 中的能力**若参考了外部仓库**，必须在对应审计文件（`docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md`）中标注数据来源（外部仓库地址 / 上游索引来源 / 上游条目）。
+4. **分类目录必入**：创建/改进的代理与技能入库时，按其**功能**放入对应分类文件夹——代理放入 `agents/<顶层分类>/<name>/`（如 `ue-game-studio/`、`academic/`、`code-quality/`），技能按功能分类放入 `skills/<分类>/<name>/`；分类文件夹不存在时**先创建**。**任何能力均不得堆在 `agents/` / `skills/` 根目录**——通用能力同样按功能归入分类文件夹（无现成分类则新建，如 `code-quality/`），不存在「留顶层」例外。
 
 > 审计文件是数据来源与入库合规性的**唯一记录入口**：新增、迁移、改进或整改能力后，同步更新 `docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md`。
 
@@ -53,7 +54,7 @@ PersonalWorkflow 是个人工作流的工具库，提供三部分能力：
 
 1. **查本地现有候选**（先查后建）：读 `skills/CATALOG.md`，命中即记作「现有候选 A」（有则可用，无则空）。
 2. **调用生成器产出 B**：把需求交给 skill-creator 执行其内部闭环（按需求创建 → 检索上游对比 → 产出「自建/上游」最优 B，上游更优则记录 `evolutions/` 优化生成器）。命令按 `skill-creator/AGENTS.md` / `SKILL.md` 执行。
-3. **对比 A 与 B** → **谁优用谁**（最优放入 `skills/<name>/`，供验证/安装/回馈）。
+3. **对比 A 与 B** → **谁优用谁**（最优按「分类目录必入」规则放入 `skills/<分类>/<name>/`，供验证/安装/回馈）。
 
 ## 生命周期操作（维护）
 

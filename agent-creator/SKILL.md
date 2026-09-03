@@ -218,7 +218,7 @@ python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --a
 
 ### 阶段 8：沉淀稳定代理
 
-代理稳定使用后：完善元数据（source/version/tags/tools_clients）→ 归档到可分发位置（若在 PersonalWorkflow 仓库内则放入 `agents/<name>/`）→ 含测试记录一并沉淀。
+代理稳定使用后：完善元数据（source/version/tags/tools_clients）→ 归档到可分发位置（若在 PersonalWorkflow 仓库内则按功能放入 `agents/<顶层分类>/<name>/`，分类不存在则创建；通用代理如 `agents/code-quality/`，无「留顶层」例外）→ 含测试记录一并沉淀。
 
 ## 质量检查清单（提交/入库前）
 

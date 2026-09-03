@@ -46,8 +46,8 @@
 用户确认（人类闸门）
    │
    ▼
-python tools/scripts/install_skill.py skills/<name>   ← 现有安装器，不改
-python tools/scripts/install_agent.py agents/<name>
+python tools/scripts/install_skill.py skills/<分类>/<name>
+python tools/scripts/install_agent.py agents/<顶层分类>/<name>
    │
    ▼
 manifest 记账 · 重启客户端生效
@@ -201,7 +201,7 @@ CI（`.github/workflows/validate.yml`）追加一行 build_catalog.py --check �
 ## 10. 验收标准
 
 1. 生成器对当前仓库生成 skills/CATALOG.md 与 agents/CATALOG.md，条目与目录一一对应且幂等。
-2. 按 §6.4 更新后，对 LLM 说"我需要在合并前审查代码"，能读目录命中 code-reviewer（agents）并给出 install_agent.py agents/code-reviewer；说"把 diff 变成 PR 总结"能命中 pr-summarizer（skills）。
+2. 按 §6.4 更新后，对 LLM 说"我需要在合并前审查代码"，能读目录命中 code-reviewer（agents）并给出 install_agent.py agents/code-quality/code-reviewer；说"把 diff 变成 PR 总结"能命中 pr-summarizer（skills）。
 3. validate_agents.py `--strict` 不把 CATALOG.md 当代理定义。
 4. §8 三件套 + CI 全部通过；生成器 `--check` 绿。
 5. 安装/更新/卸载/回滚行为与 V1 完全一致（本方案不改安装器）。

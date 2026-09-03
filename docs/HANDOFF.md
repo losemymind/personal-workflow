@@ -55,7 +55,7 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 ### tools（分发与生命周期）
 - `client_paths.py`：四端路径矩阵（唯一事实源）
 - `install_skill.py` / `install_agent.py`：四端安装（manifest 标记 `.personal-workflow-manifest.json`）
-- `build_catalog.py`：能力目录生成器（`skills/CATALOG.md` + `agents/CATALOG.md`，`--check` 防漂移；agent 条目渲染 `maturity` 字段；**递归扫描子目录** `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染——`ue-game-studio` / `academic` / 顶层通用）
+- `build_catalog.py`：能力目录生成器（`skills/CATALOG.md` + `agents/CATALOG.md`，`--check` 防漂移；agent 条目渲染 `maturity` 字段；**递归扫描子目录** `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染——`ue-game-studio` / `academic` / `code-quality`，无「留顶层」例外）
 - `update/uninstall/rollback_skill.py` + `_agent.py`：生命周期（备份至 `~/.personal-workflow/backups/`）
 - `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）
 - deepseek 路径为 best-effort（`DEEPSEEK_HARNESS_ROOT` 覆盖），未实测
@@ -67,19 +67,20 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 
 ### 外部库迁移（UEGameStudio → agents/）
 - 来源：`E:\GitHub\UEGameStudio\UEGameStudio\agents`（30 代理，7 层：academic×5 / design×3 / directors×4 / orchestration×1 / production×3 / qa×3 / technical×11）
-- 结构：6 个层（design/directors/orchestration/production/qa/technical，25 代理）迁入 `agents/ue-game-studio/<layer>/<id>/AGENT.md`（UE 专用安装包）；`academic/`（5 代理）作为**公共代理**保留在 `agents/academic/`（**层内不以 `academic-` 作前缀**，如 `anthropologist/`）；非分层通用代理 code-reviewer 保留顶层
+- 结构：6 个层（design/directors/orchestration/production/qa/technical，25 代理）迁入 `agents/ue-game-studio/<layer>/<id>/AGENT.md`（UE 专用安装包）；`academic/`（5 代理）作为**公共代理**保留在 `agents/academic/`（**层内不以 `academic-` 作前缀**，如 `anthropologist/`）；通用代理 code-reviewer / code-simplifier 归入 `agents/code-quality/`（代码质量分类，无「留顶层」例外）
 - 自包含：包内文件**已去除对 UEGameStudio 源仓库的引用**（AGENTS.md/README.md 改写为自包含描述）；包内引用公共代理用包相对路径 `../academic/<agent>`（仓库根视角 `agents/academic/<agent>`），经 `Test-Path` 验证可解析；包文件 = `AGENTS.md`（协作规则）+ `README.md`（安装清单 + 冲突处理：冲突让用户选择保留哪一个，确认前不覆盖）
 - 适配：保留全部正文与 frontmatter；补 `name`/`version`/`tags[maturity]`；`完成检查`→`完成标准`；注入 职责范围(必须做/拒绝做)/工具与权限/协作协议(升级交还) 指针化章节——全部通过 `validate_agents.py --strict`（31/31 含 code-reviewer）
 - `domain` 标签：统一为 `ue-game-studio`（30 个全部）；layer 保留原 7 层；目录放置与 `layer` 标签一致
 - 状态：全部 `static-verified`（仅静态），仅 code-reviewer 为 `runtime-verified`；真实 UE Editor / 运行时验证待后续
 
 ### 入库准入规则 + 审计文件（2026-09-03 新增）
-- 根 `AGENTS.md` 新增「入库准入规则」三条硬性约束：
+- 根 `AGENTS.md` 新增「入库准入规则」四条硬性约束：
   1. 入库 `agents/` 的代理**无论参考本地文件还是远程仓库，必经 agent-creator**，并在 `docs/AGENTS-AUDIT.md` 登记
   2. 入库 `skills/` 的技能**无论参考本地文件还是远程仓库，必经 skill-creator**，并在 `docs/SKILLS-AUDIT.md` 登记
   3. 参考外部仓库的代理/技能必须在对应审计文件中**标注数据来源**
+  4. 分类目录必入：**按功能归入分类文件夹，分类不存在则创建；无「留顶层」例外**（2026-09-03 起 code-reviewer / code-simplifier 已迁入 `agents/code-quality/`）
 - `docs/AGENTS-AUDIT.md` / `docs/SKILLS-AUDIT.md`：数据来源与入库合规的**唯一记录入口**；新增/迁移/改进/整改能力后必须同步更新
-- **审计现状**：**31 个代理全部合规**——code-reviewer 创建时经 agent-creator；academic×5 + ue-game-studio×25 于 2026-09-03 逐一补走 agent-creator 对比择优（上游 agency/ccgs/agency-zh 比对，结论自建更优/持平），证据见 `agent-creator/evolutions/2026-09-03-compare-migrated-ue-agents.md`；pr-summarizer 合规
+- **审计现状**：**32 个代理全部合规**——code-reviewer 创建时经 agent-creator；academic×5 + ue-game-studio×25 于 2026-09-03 逐一补走 agent-creator 对比择优（上游 agency/ccgs/agency-zh 比对，结论自建更优/持平），证据见 `agent-creator/evolutions/2026-09-03-compare-migrated-ue-agents.md`；code-simplifier 于同日经官方仓库导入+对比（0.86 vs 0.48）转合规；pr-summarizer + code-review-skill 均合规
 
 ### 文档质量
 - 根 `AGENTS.md` 为总编排；`skill-creator/AGENTS.md` / `agent-creator/AGENTS.md` 为各自独立技能引导（随技能分发）
@@ -94,7 +95,7 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 python tools/scripts/install_skill.py [--client opencode|claude|codex|deepseek] skills/<name>
 python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/ue-game-studio/<layer>/<name>   # UE 包内 agent
 python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/academic/<name>                 # 公共学术代理
-python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/<name>                         # 顶层通用代理
+python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/<顶层分类>/<name>            # 分类内代理
 
 # 能力目录：生成 / 校验（新增回馈后跑，CI 用 --check）
 python tools/scripts/build_catalog.py
@@ -143,7 +144,7 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | 中文检索（CJK LIKE 兜底） | ✅ search_index / search_agent_index 均支持中文关键词 |
 | 首个入库技能/代理（pr-summarizer / code-reviewer） | ✅ 已验证并安装到 opencode |
 | **外部库迁移：UEGameStudio 30 代理** | ✅ 6 层（25 代理）入 `agents/ue-game-studio/<layer>/`，academic 5 个保留 `agents/academic/`（公共，层内无 `academic-` 前缀）；包内已自包含（无 UEGameStudio 源引用），公共代理用 `../academic/` 相对路径引用；31/31 strict 通过 |
-| **能力目录递归 + 分组** | ✅ build_catalog.py 递归扫 `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染（`ue-game-studio` / `academic` / 顶层通用），install 路径含层前缀 |
+| **能力目录递归 + 分组** | ✅ build_catalog.py 递归扫 `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染（`ue-game-studio` / `academic` / `code-quality`），install 路径含层前缀；无「留顶层」例外 |
 | agent 生命周期（update/uninstall/rollback） | ✅ 已补齐（目录+单文件形态） |
 | CI（strict 验证 + pytest + 文档检查 + 目录同步） | ✅ 已配置 |
 | 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 生产器独立化（闭环 3 步，不含编排）+ 编排收敛到根 AGENTS（A vs B 谁优用谁） |
