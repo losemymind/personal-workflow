@@ -19,13 +19,13 @@ skill-creator 是一个**可独立安装**到 LLM 客户端（claude / opencode 
 动手创建前，先在本地上游索引中检索是否已有可用技能：
 
 ```bash
-python skill-creator/scripts/search_index.py "<需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
-python skill-creator/scripts/search_index.py --stats                # 索引状态
-python skill-creator/scripts/search_index.py --list-categories      # 分类分布
+python scripts/search_index.py "<需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
+python scripts/search_index.py --stats                # 索引状态
+python scripts/search_index.py --list-categories      # 分类分布
 ```
 
 - 索引文件 `indexes/upstream.db` 已随技能分发，无需联网。
-- 索引落后于上游时运行 `python skill-creator/scripts/build_index.py` 重建。
+- 索引落后于上游时运行 `python scripts/build_index.py` 重建。
 - **有匹配候选** → 记录候选，照常创建，在第 4 步与候选对比择优。
 - **无匹配候选** → 跳过对比，用自建版本。
 
@@ -34,7 +34,7 @@ python skill-creator/scripts/search_index.py --list-categories      # 分类分�
 先按 `SKILL.md` 阶段 1-2 捕捉用户实际做过的工作与「唯一人力决策点」（不确定就向用户逐条确认），再生成骨架：
 
 ```bash
-python skill-creator/scripts/create_skill.py --name <技能名> --category <分类> --risk <级别> [--out <目录>]
+python scripts/create_skill.py --name <技能名> --category <分类> --risk <级别> [--out <目录>]
 ```
 
 frontmatter 必须含 `version: "0.1.0"`（生命周期记账用）。骨架生成后按 `SKILL.md` 阶段 4 完善正文（概述 → 何时使用 → 工作原理 → 示例 → 限制）。
@@ -44,7 +44,7 @@ frontmatter 必须含 `version: "0.1.0"`（生命周期记账用）。骨架生�
 将自建技能与上游候选结构化对比（质量 6 维 + 结构 4 维）：
 
 ```bash
-python skill-creator/scripts/compare_skills.py <自建目录> <上游候选目录>
+python scripts/compare_skills.py <自建目录> <上游候选目录>
 ```
 
 - **上游更优** → 采纳上游；提炼学习点记入 `evolutions/`，反哺优化本技能方法论（反馈闭环）。
@@ -53,7 +53,7 @@ python skill-creator/scripts/compare_skills.py <自建目录> <上游候选目�
 ### 4. 自动验证
 
 ```bash
-python skill-creator/scripts/validate_skills.py [--strict] [--dir <技能目录>]
+python scripts/validate_skills.py [--strict] [--dir <技能目录>]
 ```
 
 失败必须修复后再继续。检查项（详见 `references/quality-bar.md`）：frontmatter 有效性、`name` 与目录一致、risk/version 合法、何时使用/示例/限制章节、安全护栏、引用不悬空。
@@ -64,10 +64,10 @@ python skill-creator/scripts/validate_skills.py [--strict] [--dir <技能目录>
 
 ```bash
 # 触发测试（两档：启发式默认 / 真实客户端无头 CLI）
-python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录>
-python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
-python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --improve-mode manual|cli
-python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技能名>
+python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录>
+python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
+python scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --improve-mode manual|cli
+python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技能名>
 ```
 
 （evals.json 从 `templates/evals.json.template` 复制；给出触发准确性启发式信号）
@@ -84,10 +84,7 @@ python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --sk
 
 ## 资源路径基准
 
-本技能内资源引用（`references/`、`scripts/`、`templates/`、`examples/`、`indexes/upstream.db`）均以**技能目录本身**为基准：
-
-- 在当前模块内运行时：`references/xxx.md`、`scripts/xxx.py`。
-- 安装到客户端后：以实际技能目录为准（如 `~/.config/opencode/skills/skill-creator/...`）。
+本技能是**自包含完整体**：内部所有引用（`scripts/`、`references/`、`templates/`、`examples/`、`evolutions/`、`indexes/upstream.db`）一律以 **skill-creator 目录自身为根**书写，不依赖任何外部布局。脚本调用：在本技能目录内执行 `python scripts/xxx.py ...`；不在技能目录内执行时加目录前缀 `python "<技能目录>/scripts/xxx.py" ...`（目录定位方法见 SKILL.md「资源路径基准」）。
 
 读取规则：references 文档**按需读取**；需要字段/分类时读 `references/skill-template.md`，结构规范读 `references/skill-anatomy.md`，质量标准读 `references/quality-bar.md`，写作规律（TDD 化/表述匹配失败类型/防借口）读 `references/skill-writing-guide.md`，索引细节读 `references/skill-index.md`，对比评分读 `references/skill-comparison.md`。
 
@@ -106,7 +103,7 @@ python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --sk
 | `examples/` | 创建前研究结构范本（上游学习样本，验证豁免） |
 | `evolutions/` | 记录"上游更优"对比结论（反馈闭环） |
 | `templates/` | `SKILL.template.md`（骨架）、`evals.json.template`（触发测试模板） |
-| `indexes/upstream.db` | 检索上游（随技能分发，克隆即得） |
+| `indexes/upstream.db` | 检索上游（随技能分发，安装即得） |
 
 ## 其他创建器
 

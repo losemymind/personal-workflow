@@ -1,6 +1,6 @@
 # 技能模板（Skill Template）
 
-基于 agentic-awesome-skills 的 `skill-template.md` 适配。本文件是**字段与规范参考**；可复制的骨架见 `skill-creator/templates/SKILL.template.md`（复制后直接替换占位符）。
+基于 agentic-awesome-skills 的 `skill-template.md` 适配。本文件是**字段与规范参考**；可复制的骨架见 `templates/SKILL.template.md`（复制后直接替换占位符）。
 
 ## 示例 frontmatter
 
@@ -102,5 +102,5 @@ tools: [claude, opencode, codex]  # 可选：支持的客户端
 
 - 目录名 = 技能名（小写-连字符），文件名固定为 `SKILL.md`
 - 目录结构：按功能归入分类 `<分类>/<skill-name>/SKILL.md`（规则 4；分类不存在先创建）+ `examples/` `scripts/` `templates/` `references/`（可选）
-- 运行验证：`python skill-creator/scripts/validate_skills.py`（或 `--strict`）
+- 运行验证：`python scripts/validate_skills.py`（或 `--strict`）
 - 验证通过 + 真实任务试跑通过后才提交到仓库 `skills/`

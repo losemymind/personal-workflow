@@ -1,6 +1,6 @@
 # 代理模板（Agent Template）
 
-基于四端客户端（claude/opencode/codex/deepseek-harness）的代理定义规范适配。可复制的骨架见 `agent-creator/templates/AGENT.template.md`（复制后替换占位符）。
+基于四端客户端（claude/opencode/codex/deepseek-harness）的代理定义规范适配。可复制的骨架见 `templates/AGENT.template.md`（复制后替换占位符）。
 
 ## 示例 frontmatter（openCode 兼容子集）
 

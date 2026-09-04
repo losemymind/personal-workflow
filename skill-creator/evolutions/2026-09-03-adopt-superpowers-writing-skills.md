@@ -21,8 +21,8 @@
 - 工具层不重复：本地已有 run_eval/run_loop/aggregate_benchmark（触发+增益量化），只补「纪律闸门」与方法论。
 
 ## 产出
-- 新增 `skill-creator/references/skill-writing-guide.md`（A-G 完整方法论，本地化细则）
-- `skill-creator/SKILL.md`：核心理念新增「先失败后写 + 表述匹配失败类型」小节；读取规则补新 reference；description 指南（E）；结构样例相关技能禁 @（F）；阶段 6 补 Iron Law 纪律块；阶段 9 归档路径改 `skills/<分类>/<name>/`（规则 4）；质量检查清单补 E/F/形式匹配/防借口项
+- 新增 `references/skill-writing-guide.md`（A-G 完整方法论，本地化细则）
+- `SKILL.md`：核心理念新增「先失败后写 + 表述匹配失败类型」小节；读取规则补新 reference；description 指南（E）；结构样例相关技能禁 @（F）；阶段 6 补 Iron Law 纪律块；阶段 9 归档路径改 `skills/<分类>/<name>/`（规则 4）；质量检查清单补 E/F/形式匹配/防借口项
 - `references/quality-bar.md`：description 定义（E）+ 新增「写作规律」检查项 7
 - `references/skill-template.md` / `references/skill-anatomy.md` / `templates/SKILL.template.md`：description 写法、@ 修正、目录结构规则 4 对齐
 - 验证：`validate_skills.py --strict --dir skill-creator`（及 skills）通过；pytest 通过

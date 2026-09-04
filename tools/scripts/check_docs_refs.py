@@ -94,7 +94,13 @@ def main() -> int:
             rel_md = md.parent.relative_to(REPO)
             local_probe = rel_md / Path(token.replace("/", os.sep))
             local_key = str(local_probe).replace("/", "\\")
-            if bare in index or local_key in index:
+            # module-root probe: self-contained modules (e.g. skill-creator) root internal
+            # references at the module dir, so `indexes/upstream.db` written in
+            # skill-creator/references/ resolves to skill-creator/indexes/upstream.db
+            module_key = None
+            if rel.parts and rel.parts[0] in KNOWN_DIRS and len(rel.parts) > 2:
+                module_key = str(Path(rel.parts[0]) / Path(token.replace("/", os.sep))).replace("/", "\\")
+            if bare in index or local_key in index or (module_key is not None and module_key in index):
                 continue
             # directory-only ref (e.g. `tools/`): accept if any tracked file lives under it
             if any(f == bare or f.startswith(bare + "\\") for f in index):

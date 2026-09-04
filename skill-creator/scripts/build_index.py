@@ -10,12 +10,12 @@ Every row carries a `source_repo` column; `path` is unique per source so the
 incremental sync scopes by (source_repo, path).
 
 Usage:
-    python skill-creator/scripts/build_index.py                          # all sources, full rebuild
-    python skill-creator/scripts/build_index.py --source aas             # only sickn33 (tarball)
-    python skill-creator/scripts/build_index.py --source addy            # only addyosmani (scan)
-    python skill-creator/scripts/build_index.py --incremental            # reuse upstream.db
-    python skill-creator/scripts/build_index.py --from-extracted <dir>   # use an already-checked-out repo
-    python skill-creator/scripts/build_index.py --no-dl                  # scan <repo>/skills locally
+    python scripts/build_index.py                          # all sources, full rebuild
+    python scripts/build_index.py --source aas             # only sickn33 (tarball)
+    python scripts/build_index.py --source addy            # only addyosmani (scan)
+    python scripts/build_index.py --incremental            # reuse upstream.db
+    python scripts/build_index.py --from-extracted <dir>   # use an already-checked-out repo
+    python scripts/build_index.py --no-dl                  # scan <repo>/skills locally
 
 Exit code 0 = success.
 """

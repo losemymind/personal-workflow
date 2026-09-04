@@ -9,7 +9,7 @@ Reads grading.json / timing.json from a workspace layout and produces:
   - <dir>/benchmark.md    — human-readable table (pass rate / time / tokens)
 
 Usage:
-    python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <name> [--skill-path <path>] [--config-a with_skill] [--config-b without_skill]
+    python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <name> [--skill-path <path>] [--config-a with_skill] [--config-b without_skill]
 
 Layouts supported:
     <workspace>/iteration-N/

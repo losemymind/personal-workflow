@@ -1,6 +1,6 @@
 # 技能写作规律（TDD 化 + 表述匹配失败类型）
 
-> 反哺来源：上游 obra/superpowers 仓库的「writing-skills」技能（社区成熟方法论，含措辞对照实证）+ Anthropic 官方技能写作最佳实践。2026-09-03 对比本地 skill-creator 后吸收（记录见 `skill-creator/evolutions/2026-09-03-adopt-superpowers-writing-skills.md`）。
+> 反哺来源：上游 obra/superpowers 仓库的「writing-skills」技能（社区成熟方法论，含措辞对照实证）+ Anthropic 官方技能写作最佳实践。2026-09-03 对比本地 skill-creator 后吸收（记录见 `evolutions/2026-09-03-adopt-superpowers-writing-skills.md`）。
 > 本文件补充 SKILL.md 阶段 4/6/7 与 `quality-bar.md` 的**写作规律**细节；触发量化工具见 `scripts/run_eval.py` / `run_loop.py` / `aggregate_benchmark.py`，此处不再重复。
 
 ## 1. 铁律：无「失败先例」不写技能（RED-GREEN-REFACTOR）
@@ -76,7 +76,7 @@
 ## 6. 触发面（description）与命名
 
 **description = 何时用，不是做什么。** 实证：description 总结工作流时，agent 会照 description 走捷径、跳过正文（曾出现「技能流程图规定两阶段审查，agent 只做了一次」）。细则：
-- 以**触发场景/症状**开头（Use when / 何时）；可保留**一句能力定位**（服务本仓库 CATALOG 的「用途」渲染需要），但**绝不写执行步骤/流程阶段摘要**。
+- 以**触发场景/症状**开头（Use when / 何时）；可保留**一句能力定位**（供技能目录渲染「用途」列），但**绝不写执行步骤/流程阶段摘要**。
 - 写**问题**（竞态、不一致行为）而非语言症状（setTimeout）；技术特定技能才显式写技术。
 - 第三人称、关键词覆盖（错误串/症状/同义词/工具名）。
 

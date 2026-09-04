@@ -6,7 +6,7 @@
 
 | 项 | 值 |
 |---|---|
-| 索引文件 | `agent-creator/indexes/upstream.db` |
+| 索引文件 | `indexes/upstream.db` |
 | 代理总数 | ~570（随上游更新变化） |
 | 数据源 | 多源：见下表 |
 | 许可 | 各上游仓库自身 License |
@@ -35,35 +35,35 @@ FTS5 的 `unicode61` 分词器不切分中文，因此**含中文（CJK）的查
 
 ```bash
 # 检索全库（默认所有源）
-python agent-creator/scripts/search_agent_index.py "code review"
-python agent-creator/scripts/search_agent_index.py "code review" --category security
+python scripts/search_agent_index.py "code review"
+python scripts/search_agent_index.py "code review" --category security
 
 # 按源检索
-python agent-creator/scripts/search_agent_index.py "frontend" --source agency
-python agent-creator/scripts/search_agent_index.py "前端" --source agency-zh
-python agent-creator/scripts/search_agent_index.py "programmer" --source ccgs
+python scripts/search_agent_index.py "frontend" --source agency
+python scripts/search_agent_index.py "前端" --source agency-zh
+python scripts/search_agent_index.py "programmer" --source ccgs
 
 # 查看索引状态（含按源分布）/ 分类分布
-python agent-creator/scripts/search_agent_index.py --stats
-python agent-creator/scripts/search_agent_index.py --list-categories
+python scripts/search_agent_index.py --stats
+python scripts/search_agent_index.py --list-categories
 
 # JSON 输出（便于程序化处理）
-python agent-creator/scripts/search_agent_index.py "review" --json
+python scripts/search_agent_index.py "review" --json
 ```
 
 ## 构建与更新（多源）
 
 ```bash
 # 全量重建所有源（默认：下载各源 tarball → 构建 → 自动清理）
-python agent-creator/scripts/build_agent_index.py
+python scripts/build_agent_index.py
 
 # 只重建某个源
-python agent-creator/scripts/build_agent_index.py --source agency
-python agent-creator/scripts/build_agent_index.py --source ccgs
-python agent-creator/scripts/build_agent_index.py --source agency-zh
+python scripts/build_agent_index.py --source agency
+python scripts/build_agent_index.py --source ccgs
+python scripts/build_agent_index.py --source agency-zh
 
 # 从本地已 clone/解压的仓库构建（避免重复下载；需与 --source 单值搭配）
-python agent-creator/scripts/build_agent_index.py --source agency --from-extracted <本地仓库目录>
+python scripts/build_agent_index.py --source agency --from-extracted <本地仓库目录>
 ```
 
 **同步策略：** 手动触发（推荐）。索引文件已提交入仓库，用户克隆即得索引；日常更新上游用 `--source <单源>` 按需同步。结构变更（新增/改名源）时用全量重建。注意构建会下载源 tarball，网络不可用时用 `--from-extracted` 指向本地 checkout。

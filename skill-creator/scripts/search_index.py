@@ -1,11 +1,11 @@
-"""Search the upstream skills SQLite index (skill-creator/indexes/upstream.db).
+"""Search the upstream skills SQLite index (indexes/upstream.db under the skill dir).
 
 Part of the skill-creator skill. See references/skill-index.md.
 
 Usage:
-    python skill-creator/scripts/search_index.py "keyword1 keyword2" [--category devops] [--risk safe] [--limit 10] [--json]
-    python skill-creator/scripts/search_index.py --stats
-    python skill-creator/scripts/search_index.py --list-categories
+    python scripts/search_index.py "keyword1 keyword2" [--category devops] [--risk safe] [--limit 10] [--json]
+    python scripts/search_index.py --stats
+    python scripts/search_index.py --list-categories
 
 Exit code 0 = success.
 """
@@ -60,7 +60,7 @@ def configure_utf8_output() -> None:
 def connect() -> sqlite3.Connection:
     if not DB_PATH.exists():
         print(f"❌ Index not found: {DB_PATH}")
-        print("   Run: python skill-creator/scripts/build_index.py")
+        print("   Run: python scripts/build_index.py")
         sys.exit(1)
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row

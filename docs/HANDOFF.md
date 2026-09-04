@@ -1,7 +1,7 @@
 # PersonalWorkflow 交接文档（HANDOFF）
 
 > 用途：新会话快速恢复上下文。读完本文件即可接手开发。
-> 生成日期：2026-09-03 ｜ 最近提交见 `git log --oneline -5`
+> 生成日期：2026-09-04 ｜ 最近提交见 `git log --oneline -5`（基线：4fe6a67 + 本次「四端双作用域安装 + 双创建器自包含」提交）
 ## 1. 这是什么
 
 个人工作流工具库，跑通 **检索上游 → 创建 → 对比择优 → 验证 → 安装 → 回馈** 的完整闭环。支持四个 LLM 客户端：**claude / opencode / codex / deepseek-harness**。仓库远程：`https://github.com/losemymind/personal-workflow.git`（分支 `main`）。
@@ -17,8 +17,8 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 ├── tools/docs/lifecycle.md   # 安装/生命周期通用入口
 ├── skills/               # 已验证技能库（分类化：git/pr-summarizer、development/code-review-skill；生成器内部另有 examples/）
 ├── agents/               # 已验证代理库（分类化：ue-game-studio×25、academic×5、code-quality×2，共 32 个；无「留顶层」）
-├── tools/scripts/        # 四端安装器 + 生命周期 + 能力目录生成器（manifest-driven）
-├── tests/                # pytest（25 用例，覆盖验证器/路径矩阵/生成器/quant eval）
+├── tools/scripts/        # 四端双作用域安装器（global/workspace）+ 生命周期 + 能力目录生成器（manifest-driven）
+├── tests/                # pytest（37 用例，覆盖验证器/路径矩阵/作用域/生成器/quant eval）
 ├── .github/workflows/validate.yml  # CI：双验证器 --strict + pytest + 文档引用 + 目录同步
 └── docs/                 # DEVELOPMENT-PLAN.md（开发计划）、HANDOFF.md（本文件）、AGENTS-AUDIT.md（代理审计）、SKILLS-AUDIT.md（技能审计）、ON-DEMAND-INSTALL.md（按需安装方案）
 ```
@@ -41,6 +41,9 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 - `examples/`：6 个上游学习样本（MIT，验证豁免）；`evolutions/`：对比学习记录（pr-summarizer、2026-09-03 借鉴 Anthropic 官方量化 eval 引擎、code-review-skill 导入、**2026-09-03 采纳 superpowers writing-skills 方法论**）
 - 量化 eval 引擎（移植自 Anthropic claude-plugins-official）：`scripts/run_eval.py`（heuristic/cli 双模式）、`run_loop.py`（description 自动优化，train/test 60/40 防过拟合）、`aggregate_benchmark.py`（benchmark.json+md，纯 stdlib）、`references/benchmark-schema.md`（schema）——全部客户端无关，默认 heuristic 无需外部 CLI
 - **description 上限 1024**：验证器/模板/质量条/参考全部统一（触发场景优先 + 一句能力定位，禁流程摘要——E 规律）；`description = 何时用不是做什么`
+- `INSTALL.md`：安装运行手册（第 0 步问全局/工作区 → 3 端落点 → 3 道验证关卡 → 交付；手册自身也自包含，不引用外部工具）
+- **自包含完整体**：内部所有引用以技能目录为根（`python scripts/...`、`references/...`、`indexes/upstream.db`），不引用任何外部资源/文档；「资源路径基准」含各端目录定位规程
+- 验证器安装可移植：支持 `--dir .`（安装副本自校验）；模块式自指引用（`<技能名>/...` 前缀）按技能目录解析
 - `opencode.json` 已注册 `skills.paths = ["skill-creator", "agent-creator"]`
 
 ### agent-creator（代理生产器）
@@ -52,13 +55,15 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 - 脚本：`search_agent_index.py`（检索/--source/stats/--list-categories，含 CJK LIKE 兜底）、`build_agent_index.py`（多源构建/--from-extracted）、`compare_agents.py`（自建 vs 上游对比，质量6维+结构4维，`--all-candidates`/`--json`）、`create_agent.py`（脚手架）、`validate_agents.py`（边界/权限/协作/链接校验）
 - `references/`：agent-template（四端兼容矩阵）/ agent-anatomy / agent-quality-bar / agent-index（索引说明）/ agent-comparison（对比择优评分维度，与 skill-comparison 同构）
 - `evolutions/`：对比学习记录（与 skill-creator 同构，模板见 README）
+- `INSTALL.md`：同构安装运行手册（验证关卡 = 索引 568 条 + 脚手架过 `--strict` + 资源就位）
+- **自包含完整体**：与 skill-creator 同规（引用以技能目录为根）；SKILL.md「多客户端安装指引」含产出代理的 4 端落点矩阵（claude `~/.claude/agents/`、opencode `~/.config/opencode/agent/`、codex/deepseek best-effort）
 
 ### tools（分发与生命周期）
-- `client_paths.py`：四端路径矩阵（唯一事实源）
-- `install_skill.py` / `install_agent.py`：四端安装（manifest 标记 `.personal-workflow-manifest.json`）
+- `client_paths.py`：四端**双作用域**路径矩阵（global/workspace，唯一事实源）。已修正两处实证错误：Windows 配置根为 `~/.config`（opencode **不读** `%APPDATA%\opencode`，曾致 pr-summarizer/code-reviewer 装了不加载）；codex skills 为 `~/.agents/skills`（USER 域；`~/.codex/skills` 是 SYSTEM 域，禁写）。拷贝排除 `__pycache__`；客户端检测增强（`~/.claude`/`~/.codex` 存在即视为已装）
+- `install_skill.py`：四端安装（manifest 标记 `.personal-workflow-manifest.json`）；`--scope global|workspace`，未指定时交互询问；工作区强制装到 git 仓库根（三端从 cwd 向上扫描到仓库根），非仓库环境礼貌报错。`install_agent.py` 尚未加 --scope（同构待补）
 - `build_catalog.py`：能力目录生成器（`skills/CATALOG.md` + `agents/CATALOG.md`，`--check` 防漂移；agent 条目渲染 `maturity` 字段；**递归扫描子目录** `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染——`ue-game-studio` / `academic` / `code-quality`，无「留顶层」例外）
-- `update/uninstall/rollback_skill.py` + `_agent.py`：生命周期（备份至 `~/.personal-workflow/backups/`）
-- `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）
+- `update/uninstall/rollback_skill.py` + `_agent.py`：生命周期（备份至 `~/.personal-workflow/backups/`）；工作区安装的生命周期用 `--dest <项目根>/<端目录>`
+- `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）；含「模块根探针」（自包含模块子目录文档的引用按模块根解析，如 `skill-creator/references/` 中的 `indexes/upstream.db`）
 - deepseek 路径为 best-effort（`DEEPSEEK_HARNESS_ROOT` 覆盖），未实测
 
 ### 按需安装 + 创建决策（能力目录）
@@ -93,7 +98,8 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 ```bash
 # 按需安装已有能力（先查后建：本地优先）—— 让 LLM 读目录匹配，命中给 install 命令
 #   skills/CATALOG.md  ·  agents/CATALOG.md
-python tools/scripts/install_skill.py [--client opencode|claude|codex|deepseek] skills/<name>
+# 安装器未指定 --scope 时会交互询问全局/工作区；创建器安装按各自 INSTALL.md 执行
+python tools/scripts/install_skill.py [--client opencode|claude|codex|deepseek] [--scope global|workspace] skills/<name>
 python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/ue-game-studio/<layer>/<name>   # UE 包内 agent
 python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/academic/<name>                 # 公共学术代理
 python tools/scripts/install_agent.py [--client opencode|claude|codex|deepseek] agents/<顶层分类>/<name>            # 分类内代理
@@ -131,7 +137,7 @@ python tools/scripts/uninstall_skill.py <名>
 python tools/scripts/rollback_skill.py <名>
 
 # 测试/CI 等价
-python -m pytest tests/ -q          # 25 用例
+python -m pytest tests/ -q          # 37 用例
 python tools/scripts/check_docs_refs.py   # 文档引用完整性（exit 0）
 python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 ```
@@ -161,7 +167,13 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | **skill-creator 反哺 superpowers writing-skills** | ✅ 2026-09-03 完整采纳：新增 `references/skill-writing-guide.md`（先失败后写/表述匹配失败类型/防借口/措辞微测）+ SKILL.md 阶段 6 纪律块 + description 触发面规范 + 禁 `@` 引用；quality-bar 检查项 7 |
 | **description 上限 1024** | ✅ validate_skills/template/quality-bar/skill-template/skill-anatomy 统一；code-review-skill 描述重写为完整触发词 |
 | **deepseek-harness 路径实测** | ⚠️ 未做（需真实环境；`DEEPSEEK_HARNESS_ROOT` 兜底） |
-| **opencode 真实安装待重启验证** | ⚠️ code-reviewer 已 install，需重启客户端确认加载 |
+| **四端双作用域安装（全局/工作区）** | ✅ client_paths scope 矩阵 + `install_skill.py --scope`（未指定交互询问，工作区装 git 根）；3 端 × 2 作用域沙箱实证 |
+| **双创建器 INSTALL.md 运行手册** | ✅ `skill-creator/INSTALL.md` + `agent-creator/INSTALL.md`（作用域选择 + 验证关卡 + 客户端中立生命周期），手册自身自包含 |
+| **双创建器自包含完整体** | ✅ 内部引用一律以技能目录为根（`python scripts/...`），不引用外部资源/文档；`check_docs_refs.py` 增模块根探针；脚本 usage 同步 |
+| **opencode 路径修正（Windows）** | ✅ 配置根 `~/.config` 而非 `%APPDATA%`（实证 `%APPDATA%\opencode` 不被读取）；回归测试已钉住 |
+| **codex 路径修正** | ✅ USER 域 `~/.agents/skills`（原矩阵指向 `~/.codex/skills` SYSTEM 域）；注意 Codex 内置 `.system/skill-creator` 同名并存 |
+| **pr-summarizer/code-reviewer 错装迁移** | ⚠️ 旧副本在 `%APPDATA%\opencode`（不被读取）；路径已修复，待用户确认后用安装器重装到 `~/.config\opencode` |
+| **opencode 真实安装待重启验证** | ⚠️ 路径修复后的真实安装尚未执行（含迁移），未对任何真实客户端目录做过安装 |
 | **UEGameStudio 30 代理运行时验证** | ⚠️ 全为 `static-verified`，需在真实 UE Editor / 目标项目试跑后逐档升 `runtime-verified`，并同步 CATALOG |
 | **上游索引更新频率** | 建议定期用 `--source <单源>` 手动同步（技能/代理各自脚本） |
 | **新技能/代理持续沉淀** | 按需用本仓库流程创建后回馈到 skills/、agents/（重跑 build_catalog.py） |
@@ -175,7 +187,7 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 4. 改动文档时牢记**大小写敏感**（目录小写 + `SKILL.md`/`AGENT.md`/`AGENTS.md` 大写）
 5. 改后防回归三件套全跑：
    ```bash
-   python -m pytest tests/ -q                        # 25 用例（含 quant eval 引擎 3 项）
+   python -m pytest tests/ -q                        # 37 用例（含路径矩阵/作用域/quant eval）
    python tools/scripts/check_docs_refs.py           # md 引用大小写校验（exit 0）
    python skill-creator/scripts/validate_skills.py --strict --dir skills
    python skill-creator/scripts/validate_skills.py --strict --dir skill-creator

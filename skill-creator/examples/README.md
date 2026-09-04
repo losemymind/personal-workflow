@@ -1,6 +1,6 @@
 # examples/ — 上游学习样本
 
-本目录收录来自 [sickn33/agentic-awesome-skills](https://github.com/sickn33/agentic-awesome-skills) 的 6 个技能完整目录，作为 skill-creator 的**学习样本**（对应官方 `skill-anatomy.md` 的「研究这些示例」）。它们不是本仓库的产出物，**验证器自动豁免**（`EXEMPT_DIRS = {"examples"}`）。
+本目录收录来自 [sickn33/agentic-awesome-skills](https://github.com/sickn33/agentic-awesome-skills) 的 6 个技能完整目录，作为 skill-creator 的**学习样本**（对应官方 `skill-anatomy.md` 的「研究这些示例」）。它们不是 skill-creator 自身的产出物，**验证器自动豁免**（`EXEMPT_DIRS = {"examples"}`）。
 
 ## 来源与许可
 

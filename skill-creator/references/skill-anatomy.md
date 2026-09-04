@@ -125,7 +125,7 @@ skills/
 
 ### 研究这些示例
 
-本地已收录 6 个上游完整示例（`skill-creator/examples/`，来源 agentic-awesome-skills，MIT 许可；验证器豁免该目录）：
+本地已收录 6 个上游完整示例（`examples/`，来源 agentic-awesome-skills，MIT 许可；验证器豁免该目录）：
 
 **初学者：**
 - `examples/brainstorming/SKILL.md` — 清晰的结构（阶段化流程 + Understanding Lock 硬门）
@@ -203,7 +203,7 @@ description: "任何创意工作之前你 MUST 使用此技能…"
 ## 下一步
 
 1. 阅读 3-5 个现有技能以查看不同风格
-2. 使用 `skill-creator/templates/SKILL.template.md` 创建
+2. 使用 `templates/SKILL.template.md` 创建
 3. 用你的 AI 助手测试
 4. 通过运行 `validate_skills.py` 验证后提交
 

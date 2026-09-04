@@ -11,9 +11,9 @@
 | **aas** | [sickn33/agentic-awesome-skills](https://github.com/sickn33/agentic-awesome-skills) | ~2100 | 官方 `skills_index.json` + 目录扫描 | `aas` |
 | **addy** | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | 25 | 扫描 `skills/*/SKILL.md`（无官方索引） | `addy` |
 
-- 检索全库：`python skill-creator/scripts/search_index.py "<关键词>"`（默认查所有源）
+- 检索全库：`python scripts/search_index.py "<关键词>"`（默认查所有源）
 - 按源检索：加 `--source addy`（或 `aas`）
-- 重建/增量：`python skill-creator/scripts/build_index.py [--source all|aas|addy] [--incremental]`
+- 重建/增量：`python scripts/build_index.py [--source all|aas|addy] [--incremental]`
 - 双源均在 MIT 许可下使用，入库技能需保留来源归属
 - 索引细节见 `references/skill-index.md`；新建技能时先在两库中「先查后建」
 
@@ -29,6 +29,7 @@ skill-creator/
   README.md                 # 说明
   SKILL.md                  # 核心：创建/改进/验证/安装技能的方法论（10 阶段工作流）
   AGENTS.md                 # 独立技能引导（何时使用/工作流/资源导览；可独立安装）
+  INSTALL.md                # 安装运行手册（全局/工作区选择 + 3 端落点 + 验证关卡）
   scripts/
     build_index.py          # 构建上游技能索引（tarball→SQLite，支持 --incremental）
     search_index.py         # 检索上游索引（FTS5 全文/分类/风险过滤）
@@ -47,6 +48,7 @@ skill-creator/
     skill-template.md       # 技能模板：字段与分类完整参考
     skill-anatomy.md        # 技能解剖：结构与渐进式披露
     quality-bar.md          # 质量标准与验证标准（6 项质量检查）
+    skill-writing-guide.md  # 写作规律（TDD 化/表述匹配失败类型/防借口/措辞微测）
     skill-index.md          # 上游索引：构建/检索/增量更新说明
     skill-comparison.md     # 对比评分维度与择优流程
     benchmark-schema.md     # 评测/基准 JSON schema（移植自 Anthropic 官方）
@@ -69,6 +71,6 @@ skill-creator/
 
 1. 参考本目录 `SKILL.md` 的技能创建方法（10 阶段工作流）
 2. 使用 `scripts/create_skill.py` 脚手架或 `templates/SKILL.template.md` 作为骨架创建你的 Skill
-3. 运行自动验证：`python skill-creator/scripts/validate_skills.py --strict --dir <技能目录>`（失败必须修复）
-4. 将产出的技能安装到目标客户端的 skills/ 目录，按客户端文档完成后续配置
+3. 运行自动验证：`python scripts/validate_skills.py --strict --dir <技能目录>`（失败必须修复）
+4. 将产出的技能安装到目标客户端的 skills/ 目录（运行手册见 `INSTALL.md`），按客户端文档完成后续配置
 5. 经验证的技能归档到可分发位置

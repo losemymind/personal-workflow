@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from client_paths import client_paths, read_version
+from client_paths import COPY_IGNORE, client_paths, read_version
 
 MANIFEST_NAME = ".personal-workflow-manifest.json"
 
@@ -102,7 +102,7 @@ def main() -> int:
 
         if dst.exists():
             shutil.rmtree(dst)
-        shutil.copytree(src, dst)
+        shutil.copytree(src, dst, ignore=COPY_IGNORE)
         manifest["version"] = new_version
         manifest["source"] = str(src)
         manifest["updated_at"] = datetime.now().isoformat(timespec="seconds")

@@ -1,6 +1,6 @@
 # 质量标准与验证标准（Quality Bar）
 
-基于 agentic-awesome-skills 的 `quality-bar.md` 适配。技能必须达到以下 **6 项质量检查** 才能视为合格。其中部分由 `skill-creator/scripts/validate_skills.py` 自动执行（标注「自动」），其余需要人工评审。
+基于 agentic-awesome-skills 的 `quality-bar.md` 适配。技能必须达到以下 **6 项质量检查** 才能视为合格。其中部分由 `scripts/validate_skills.py` 自动执行（标注「自动」），其余需要人工评审。
 
 ## 6 项质量检查
 
@@ -62,10 +62,10 @@
 
 ```bash
 # 标准模式（警告不阻断，有错误时退出码 1）
-python skill-creator/scripts/validate_skills.py [--dir <skills目录>]
+python scripts/validate_skills.py [--dir <skills目录>]
 
 # 严格模式（警告即失败，适合 CI）
-python skill-creator/scripts/validate_skills.py --strict
+python scripts/validate_skills.py --strict
 ```
 
 ## 验证器检查项一览

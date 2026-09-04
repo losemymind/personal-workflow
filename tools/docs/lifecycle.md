@@ -7,18 +7,21 @@ update / uninstall / rollback 的唯一事实来源。
 ## 安装（install）
 
 ```bash
-# 指定客户端
-python tools/scripts/install_skill.py --client opencode <技能目录>
-python tools/scripts/install_skill.py --client claude   <技能目录>
-python tools/scripts/install_skill.py --client codex    <技能目录>
-python tools/scripts/install_skill.py --client deepseek <技能目录>
+# 指定客户端（--scope 缺省会交互式询问全局/工作区）
+python tools/scripts/install_skill.py --client opencode <技能目录> --scope global
+python tools/scripts/install_skill.py --client claude   <技能目录> --scope workspace
+python tools/scripts/install_skill.py --client codex    <技能目录> --scope global
+python tools/scripts/install_skill.py --client deepseek <技能目录> --scope global
 
 # 自动探测已安装的客户端
-python tools/scripts/install_skill.py <技能目录>
+python tools/scripts/install_skill.py <技能目录> --scope global
 
 # 预览将安装到哪里（不实际安装）
-python tools/scripts/install_skill.py <技能目录> --dry-run
+python tools/scripts/install_skill.py <技能目录> --scope workspace --dry-run
 ```
+
+作用域：`global` = 用户级（所有项目可用）；`workspace` = 项目级（装到当前 git 仓库根，
+三端都从 cwd 向上扫描到仓库根，装进子目录会漏）。完整安装运行手册见 `skill-creator/INSTALL.md`。
 
 代理安装同构：`python tools/scripts/install_agent.py ...`
 
@@ -73,15 +76,19 @@ python tools/scripts/rollback_skill.py <技能名> --version 0.1.0   # 指定版
 
 ## 客户端路径矩阵
 
-| 客户端 | skills 目录（用户级） | agents 目录（用户级） | 配置 | 备注 |
+| 客户端 | skills 全局（用户级） | skills 工作区（项目级，装到 git 根） | 配置 | 备注 |
 |---|---|---|---|---|
-| claude | `~/.claude/skills/` | `~/.claude/agents/` | `~/.claude/settings.json` | 项目级 `.claude/` |
-| opencode | `~/.config/opencode/skills/` | `~/.config/opencode/agent/` | `~/.config/opencode/opencode.json` | 项目级 `.opencode/` 或 `skills.paths` |
-| codex | `~/.codex/skills/` | `~/.codex/agents/` | `~/.codex/config.toml` | 需要 experimental skills 特性 |
-| deepseek | `~/.../skills/`(随版本) | `~/.../agents/`(随版本) | `harness.json` 等 | 用 `DEEPSEEK_HARNESS_ROOT` 覆盖，以官方文档为准 |
+| claude | `~/.claude/skills/` | `<项目根>/.claude/skills/` | `~/.claude/settings.json` | 同名时全局覆盖工作区；目录可为符号链接 |
+| opencode | `~/.config/opencode/skills/` | `<项目根>/.opencode/skills/` | `~/.config/opencode/opencode.json` | 或 `skills.paths` 注册；另兼容读 `~/.claude/skills/` 与 `~/.agents/skills/` |
+| codex | `~/.agents/skills/`（USER 域） | `<项目根>/.agents/skills/`（REPO 域） | `~/.codex/config.toml` | `~/.codex/skills/` 是 SYSTEM 域（内置技能），禁写；内置同名 `.system/skill-creator` 会并存 |
+| deepseek | `~/.../skills/`(随版本) | 无官方约定（best-effort） | `harness.json` 等 | 用 `DEEPSEEK_HARNESS_ROOT` 覆盖，以官方文档为准 |
+
+agents 目录（用户级）：claude `~/.claude/agents/`、opencode `~/.config/opencode/agent/`、
+codex `~/.codex/agents/`（代理放置无官方约定，best-effort）、deepseek 随版本。
 
 所有路径统一由 `tools/scripts/client_paths.py` 解析；安装器不接受硬编码路径。
-Windows 下 `~` 对应 `%USERPROFILE%`，`~/.config` 对应 `%APPDATA%`。
+Windows 下 `~` 对应 `%USERPROFILE%`；`~/.config` 对应 `%USERPROFILE%\.config`（**不是** `%APPDATA%`——opencode 在 Windows 只从 `%USERPROFILE%\.config\opencode` 加载，已实测 `%APPDATA%\opencode` 不被读取）。设 `XDG_CONFIG_HOME` 可覆盖配置根。
+工作区安装的生命周期（update/uninstall/rollback）用 `--dest <项目根>/<端目录>` 指向对应位置。
 
 ## 约定
 

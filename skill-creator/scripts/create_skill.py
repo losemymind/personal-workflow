@@ -5,8 +5,8 @@ optional scripts/ references/ examples/ templates/ dirs. Output validates with
 validate_skills.py.
 
 Usage:
-    python skill-creator/scripts/create_skill.py                          # interactive
-    python skill-creator/scripts/create_skill.py --name foo --category productivity --risk safe --out ./skills  # non-interactive
+    python scripts/create_skill.py                          # interactive
+    python scripts/create_skill.py --name foo --category productivity --risk safe --out ./skills  # non-interactive
 """
 
 import argparse
@@ -243,8 +243,8 @@ def main() -> int:
     body = build_skill_md(name, description, category, risk, tools, author, args.version)
     (skill_dir / "SKILL.md").write_text(body, encoding="utf-8")
     print(f"✅ 创建骨架: {skill_dir}")
-    print(f"   下一步: python skill-creator/scripts/validate_skills.py --dir {skill_dir}")
-    print(f"   然后按 skill-creator/SKILL.md 阶段 4-6 完善内容与测试")
+    print(f"   下一步: python scripts/validate_skills.py --dir {skill_dir}")
+    print(f"   然后按本技能 SKILL.md 阶段 4-6 完善内容与测试")
     return 0
 
 

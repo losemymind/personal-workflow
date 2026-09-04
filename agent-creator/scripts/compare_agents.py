@@ -10,8 +10,8 @@ Scores are computed on the AGENT.md files themselves (no index required), using:
     single-responsibility, body size control
 
 Usage:
-    python agent-creator/scripts/compare_agents.py <local-agent-dir> <upstream-agent-dir> [--json]
-    python agent-creator/scripts/compare_agents.py <local-agent-dir> --all-candidates
+    python scripts/compare_agents.py <local-agent-dir> <upstream-agent-dir> [--json]
+    python scripts/compare_agents.py <local-agent-dir> --all-candidates
 
 Exit code 0 = success (report printed; verdict included).
 """

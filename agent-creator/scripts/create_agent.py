@@ -5,8 +5,8 @@ identity/boundary/permission/collaboration sections. Output validates with
 validate_agents.py.
 
 Usage:
-    python agent-creator/scripts/create_agent.py                          # interactive
-    python agent-creator/scripts/create_agent.py --name my-reviewer --mode subagent --out ./agents  # non-interactive
+    python scripts/create_agent.py                          # interactive
+    python scripts/create_agent.py --name my-reviewer --mode subagent --out ./agents  # non-interactive
 """
 
 import argparse
@@ -193,8 +193,8 @@ def main() -> int:
     body = build_agent_md(name, description, mode, tools, args.version)
     (agent_dir / "AGENT.md").write_text(body, encoding="utf-8")
     print(f"✅ 创建骨架: {agent_dir}")
-    print(f"   下一步: python agent-creator/scripts/validate_agents.py --dir {agent_dir}")
-    print("   然后按 agent-creator/SKILL.md 阶段 4-6 完善内容与测试")
+    print(f"   下一步: python scripts/validate_agents.py --dir {agent_dir}")
+    print("   然后按本技能 SKILL.md 阶段 4-6 完善内容与测试")
     return 0
 
 

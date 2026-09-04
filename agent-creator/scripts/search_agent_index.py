@@ -1,11 +1,11 @@
-"""Search the upstream agents SQLite index (agent-creator/indexes/upstream.db).
+"""Search the upstream agents SQLite index (indexes/upstream.db under the skill dir).
 
 Part of the agent-creator skill. See references/agent-index.md.
 
 Usage:
-    python agent-creator/scripts/search_agent_index.py "keyword1 keyword2" [--source agency|ccgs|agency-zh] [--category X] [--limit 10] [--json]
-    python agent-creator/scripts/search_agent_index.py --stats
-    python agent-creator/scripts/search_agent_index.py --list-categories
+    python scripts/search_agent_index.py "keyword1 keyword2" [--source agency|ccgs|agency-zh] [--category X] [--limit 10] [--json]
+    python scripts/search_agent_index.py --stats
+    python scripts/search_agent_index.py --list-categories
 
 Exit code 0 = success.
 """
@@ -61,7 +61,7 @@ def configure_utf8_output() -> None:
 def connect() -> sqlite3.Connection:
     if not DB_PATH.exists():
         print(f"❌ Index not found: {DB_PATH}")
-        print("   Run: python agent-creator/scripts/build_agent_index.py")
+        print("   Run: python scripts/build_agent_index.py")
         sys.exit(1)
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row

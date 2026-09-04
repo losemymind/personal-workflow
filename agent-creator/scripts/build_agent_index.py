@@ -13,11 +13,11 @@ Each row carries `source_repo`; `path` is unique per source so incremental sync
 scopes by (source_repo, path).
 
 Usage:
-    python agent-creator/scripts/build_agent_index.py                       # all sources, full rebuild
-    python agent-creator/scripts/build_agent_index.py --source agency       # only one source
-    python agent-creator/scripts/build_agent_index.py --incremental         # reuse upstream.db
-    python agent-creator/scripts/build_agent_index.py --from-extracted <dir> # use an already-checked-out repo (single source)
-    python agent-creator/scripts/build_agent_index.py --no-dl               # scan local checkout
+    python scripts/build_agent_index.py                       # all sources, full rebuild
+    python scripts/build_agent_index.py --source agency       # only one source
+    python scripts/build_agent_index.py --incremental         # reuse upstream.db
+    python scripts/build_agent_index.py --from-extracted <dir> # use an already-checked-out repo (single source)
+    python scripts/build_agent_index.py --no-dl               # scan local checkout
 
 Exit code 0 = success.
 """

@@ -9,8 +9,8 @@ Scores are computed on the SKILL.md files themselves (no index required), using:
     body size control
 
 Usage:
-    python skill-creator/scripts/compare_skills.py <local-skill-dir> <upstream-skill-dir> [--json]
-    python skill-creator/scripts/compare_skills.py <local-skill-dir> --all-candidates
+    python scripts/compare_skills.py <local-skill-dir> <upstream-skill-dir> [--json]
+    python scripts/compare_skills.py <local-skill-dir> --all-candidates
     
 Exit code 0 = success (report printed; verdict included).
 """

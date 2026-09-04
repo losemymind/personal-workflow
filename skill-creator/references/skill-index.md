@@ -6,7 +6,7 @@
 
 | 项 | 值 |
 |---|---|
-| 索引文件 | `skill-creator/indexes/upstream.db` |
+| 索引文件 | `indexes/upstream.db` |
 | 技能总数 | ~2130（随上游更新变化） |
 | 数据源 | 多源：见下表 |
 | 许可 | 各上游仓库 MIT License |
@@ -32,35 +32,35 @@ FTS5 的 `unicode61` 分词器不切分中文，因此**含中文（CJK）的查
 
 ```bash
 # 检索全库（默认所有源）
-python skill-creator/scripts/search_index.py "debugging"
-python skill-creator/scripts/search_index.py "git push" --category devops --risk safe
+python scripts/search_index.py "debugging"
+python scripts/search_index.py "git push" --category devops --risk safe
 
 # 按源检索（aas 或 addy）
-python skill-creator/scripts/search_index.py "accessibility" --source addy
+python scripts/search_index.py "accessibility" --source addy
 
 # 查看索引状态（含按源分布）/ 分类分布
-python skill-creator/scripts/search_index.py --stats
-python skill-creator/scripts/search_index.py --list-categories
+python scripts/search_index.py --stats
+python scripts/search_index.py --list-categories
 
 # JSON 输出（便于程序化处理）
-python skill-creator/scripts/search_index.py "pdf" --json
+python scripts/search_index.py "pdf" --json
 ```
 
 ## 构建与更新（多源）
 
 ```bash
 # 全量重建所有源（默认：下载各源 tarball → 构建 → 自动清理）
-python skill-creator/scripts/build_index.py
+python scripts/build_index.py
 
 # 只重建某个源
-python skill-creator/scripts/build_index.py --source aas
-python skill-creator/scripts/build_index.py --source addy
+python scripts/build_index.py --source aas
+python scripts/build_index.py --source addy
 
 # 增量同步（推荐日常使用：复用现有 upstream.db，只更新增/改/删项，速度快）
-python skill-creator/scripts/build_index.py --incremental
+python scripts/build_index.py --incremental
 
 # 从本地已 clone/解压的仓库构建（避免重复下载；需与 --source 单值搭配）
-python skill-creator/scripts/build_index.py --source addy --from-extracted <本地仓库目录>
+python scripts/build_index.py --source addy --from-extracted <本地仓库目录>
 ```
 
 **同步策略：** 手动触发（推荐）。索引文件已提交入仓库，用户克隆即得索引；日常更新上游用 `--incremental`（快），索引结构变更时用完整重建。注意多源全量构建会下载全部源（约 110MB+），建议用 `--source <单源>` + `--incremental` 按需同步。

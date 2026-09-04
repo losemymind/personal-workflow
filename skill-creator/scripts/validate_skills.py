@@ -1,6 +1,6 @@
 """Validate skills in the PersonalWorkflow repository.
 
-Part of the skill-creator skill (see skill-creator/SKILL.md).
+Part of the skill-creator skill (see SKILL.md).
 Adapted from agentic-awesome-skills' tools/scripts/validate_skills.py.
 Checks frontmatter schema, content triggers/examples/limitations,
 security guardrails, dangling local links, and backtick resource
@@ -8,7 +8,7 @@ references (`references/x.md`, `scripts/x.py`, `templates/x`).
 Supports both English and Chinese section headers.
 
 Usage:
-    python skill-creator/scripts/validate_skills.py [--dir <skills_dir>] [--strict]
+    python scripts/validate_skills.py [--dir <skills_dir>] [--strict]
 
 Exit code 0 = all passed, 1 = errors found (or warnings in strict mode).
 """
@@ -154,6 +154,9 @@ def parse_frontmatter(content: str):
 
 
 def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> dict:
+    # Normalize so `--dir .` (running inside an installed skill dir) resolves the
+    # real folder name for the name-vs-folder check and stable relative paths.
+    skills_dir = os.path.abspath(skills_dir)
     errors = []
     warnings = []
     advisories = []
@@ -313,11 +316,17 @@ def collect_validation_results(skills_dir: str, strict_mode: bool = False) -> di
             if os.path.isabs(ref_clean):
                 continue
             # Resolve relative to the skill dir first, then fall back to the repo root
-            # (covers both `references/x.md` and `skill-creator/references/x.md` forms)
+            # (covers both `references/x.md` and `<skill-dir>/references/x.md` forms).
             targets = [
                 os.path.normpath(os.path.join(root, ref_clean)),
                 os.path.normpath(os.path.join(REPO_ROOT, ref_clean)),
             ]
+            # Module-style self-references (`<own-folder>/...`) must also resolve once
+            # the skill is installed outside the repo (e.g. ~/.config/opencode/skills/):
+            # strip the leading segment that matches the skill's own folder name.
+            parts = ref_clean.split("/")
+            if len(parts) > 1 and parts[0] == os.path.basename(root):
+                targets.append(os.path.normpath(os.path.join(root, *parts[1:])))
             if not any(os.path.exists(t) for t in targets):
                 errors.append(f"❌ {rel_path}: Backtick reference '{ref_clean}' does not exist locally.")
 
@@ -371,7 +380,7 @@ def validate_skills(skills_dir: str, strict_mode: bool = False) -> bool:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Validate PersonalWorkflow skills")
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (for CI)")
-    parser.add_argument("--dir", default=None, help="Skills directory to validate (default: <repo>/skills or <repo>/skill-creator)")
+    parser.add_argument("--dir", default=None, help="Skills directory to validate (default: auto-detected skills/ under the repo root)")
     args = parser.parse_args()
 
     base_dir = find_repo_root(__file__)

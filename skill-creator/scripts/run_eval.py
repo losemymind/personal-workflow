@@ -14,7 +14,7 @@ Reads an eval set (evals.json: query + should_trigger), runs each query, and
 reports per-query trigger rate plus summary (passed/total, precision, recall).
 
 Usage:
-    python skill-creator/scripts/run_eval.py --eval-set <evals.json> --skill-dir <skill> [--mode heuristic|cli] [--client claude] [--runs-per-query 1] [--threshold 0.5] [--json]
+    python scripts/run_eval.py --eval-set <evals.json> --skill-dir <skill> [--mode heuristic|cli] [--client claude] [--runs-per-query 1] [--threshold 0.5] [--json]
 
 Exit code 0 = evaluation produced; 1 if error.
 """

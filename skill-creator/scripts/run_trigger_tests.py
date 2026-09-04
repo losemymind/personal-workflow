@@ -7,7 +7,7 @@ match against the skill's description to give a fast signal, marking manual
 verification as the authoritative step (see SKILL.md stage 7).
 
 Usage:
-    python skill-creator/scripts/run_trigger_tests.py <skill-dir> [--evals evals.json] [--json]
+    python scripts/run_trigger_tests.py <skill-dir> [--evals evals.json] [--json]
 
 Exit code 0 = all evals classified; exits 1 if no evals file found.
 """
@@ -82,7 +82,7 @@ def main() -> int:
     if evals_path is None:
         print(
             "❌ No evals.json found. Create one from "
-            "skill-creator/templates/evals.json.template"
+            "templates/evals.json.template (skill-creator 目录内)"
         )
         return 1
 

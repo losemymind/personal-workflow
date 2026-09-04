@@ -64,10 +64,13 @@ skill-creator/
 
 ## 资源路径基准
 
-本技能内部所有资源引用均以**自身目录**为基准：
+本技能是**自包含完整体**：内部所有引用（脚本、参考、索引、模板、示例、演进记录）一律以 **skill-creator 目录自身为根**书写，不依赖任何外部布局：
 
-- **按模块路径运行时**：`skill-creator/references/xxx.md`、`skill-creator/scripts/validate_skills.py`。
-- **安装到客户端后**：以实际安装位置的相对路径为准（如 `references/xxx.md`）。
+- 脚本：`python scripts/<脚本>.py ...`（如 `python scripts/validate_skills.py`）
+- 参考：`references/skill-template.md`、`references/quality-bar.md` 等
+- 索引：`indexes/upstream.db`；模板：`templates/`；示例：`examples/`；记录：`evolutions/`
+
+**调用约定**：上述命令均以「在本技能目录内执行」为准；不在技能目录内执行时，给命令加上技能目录前缀：`python "<技能目录>/scripts/<脚本>.py" ...`。定位本技能目录的方法：codex 的技能列表自带文件路径，直接使用；claude/opencode 按存在性依次探测——工作区候选 `<项目>/.claude/skills/skill-creator/`、`<项目>/.opencode/skills/skill-creator/`、`<项目>/.agents/skills/skill-creator/`；全局候选 `~/.claude/skills/skill-creator/`、`~/.config/opencode/skills/skill-creator/`、`~/.agents/skills/skill-creator/`。脚本会以自身位置定位索引/模板等内部资源，无需其他配置。
 
 读取规则：references 文档**按需读取**（渐进式披露），需要字段/分类细节时读 `references/skill-template.md`，需要结构规范时读 `references/skill-anatomy.md`，需要质量标准时读 `references/quality-bar.md`，需要写作规律（TDD 化/表述匹配失败类型/防借口/微测）时读 `references/skill-writing-guide.md`；不要一次性全部注入。
 
@@ -198,13 +201,13 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 动手创建前，**先在本地索引中检索上游 agentic-awesome-skills 是否已有可用技能**（避免重复造轮子，是本技能的第一个决策门）：
 
 ```bash
-python skill-creator/scripts/search_index.py "<用户需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
-python skill-creator/scripts/search_index.py --stats                # 查看索引状态
-python skill-creator/scripts/search_index.py --list-categories      # 列出全部分类
+python scripts/search_index.py "<用户需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
+python scripts/search_index.py --stats                # 查看索引状态
+python scripts/search_index.py --list-categories      # 列出全部分类
 ```
 
 - 索引文件 `indexes/upstream.db` 已随仓库提交，无需联网即可检索。
-- **索引落后于上游时**（上游有更新）：运行 `python skill-creator/scripts/build_index.py` 重建。
+- **索引落后于上游时**（上游有更新）：运行 `python scripts/build_index.py` 重建。
 - 检索结果给出：技能名/描述/路径/风险/分类/行数/目录结构标志（scripts/references/examples）。
 - 检索详情见 `references/skill-index.md`。
 
@@ -241,7 +244,7 @@ python skill-creator/scripts/search_index.py --list-categories      # 列出全�
 - 按「自由度匹配脆弱性」决定结构强度（见 `references/quality-bar.md` 与正文「核心理念」节）。
 - 从最小可行开始，先让技能「跑起来」，再按反馈扩展。
 - 使用 `templates/SKILL.template.md` 作为骨架；字段与分类完整参考见 `references/skill-template.md`。
-- 可一键生成骨架：`python skill-creator/scripts/create_skill.py --name <技能名> --category <分类> --risk <级别>`（交互式或 `--no-interactive`）。
+- 可一键生成骨架：`python scripts/create_skill.py --name <技能名> --category <分类> --risk <级别>`（交互式或 `--no-interactive`）。
 - frontmatter 应声明 `version: "0.1.0"`（语义化版本，生命周期管理依赖它记账）。
 
 ### 阶段 4：编写 SKILL.md
@@ -257,12 +260,12 @@ python skill-creator/scripts/search_index.py --list-categories      # 列出全�
 编写完成后、测试前，运行技能自带的验证器（基于 agentic-awesome-skills 的验证器实现，位于本技能的 `scripts/`）：
 
 ```bash
-python skill-creator/scripts/validate_skills.py                # 标准模式（警告不阻断）
-python skill-creator/scripts/validate_skills.py --strict       # 严格模式（有警告即失败，适合 CI）
-python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验指定目录
+python scripts/validate_skills.py                # 标准模式（警告不阻断）
+python scripts/validate_skills.py --strict       # 严格模式（有警告即失败，适合 CI）
+python scripts/validate_skills.py --dir <skills目录>  # 校验指定目录
 ```
 
-说明：默认扫描 `<repo>/skills/`（正式技能库）；校验本技能自身或新技能草稿时需 `--dir skill-creator` 或 `--dir <新技能目录>`。
+说明：不带 `--dir` 时默认扫描「执行命令所在仓库根」的 `skills/` 目录（宿主环境用法）；校验本技能自身或新技能草稿时，在本技能目录内执行并用 `--dir .`，或显式 `--dir <技能目录>`。
 
 验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤1024 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
 
@@ -270,9 +273,9 @@ python skill-creator/scripts/validate_skills.py --dir <skills目录>  # 校验�
 
 ```bash
 # 1) 确定性触发启发式（无外部 CLI，默认）
-python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录>
+python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录>
 # 2) 真实客户端无头 CLI 触发（有 claude CLI 时可用；opencode/codex 后续可接入）
-python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
+python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
 ```
 
 输出每条查询的触发判定 + 汇总（passed/total、precision、recall）；`--json` 可机器读取。
@@ -280,7 +283,7 @@ python skill-creator/scripts/run_eval.py --eval-set <技能目录>/evals.json --
 **量化迭代基准（借鉴 Anthropic 官方，客户端无关）**：对「有技能 vs 无技能基线」组织 `<workspace>/iteration-N/eval-<名>/<with_skill|without_skill>/run-1/grading.json`（+ `timing.json`），再汇总为带 mean±stddev 与 delta 的基准：
 
 ```bash
-python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <名>
+python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <名>
 ```
 
 产物 `benchmark.json`（+ `benchmark.md`），直接读 delta 判断技能相对基线的真实增益；高方差 eval 视为 flaky 需更多 run。Schema 见 `references/benchmark-schema.md`。
@@ -291,10 +294,10 @@ python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --sk
 
 ```bash
 # 对比单个技能目录
-python skill-creator/scripts/compare_skills.py <自建目录> <上游候选目录>
+python scripts/compare_skills.py <自建目录> <上游候选目录>
 
 # 对比某上下游候选目录下的全部技能
-python skill-creator/scripts/compare_skills.py <自建目录> <上游目录> --all-candidates
+python scripts/compare_skills.py <自建目录> <上游目录> --all-candidates
 ```
 
 评分维度（详见 `references/skill-comparison.md`）：
@@ -333,7 +336,7 @@ python skill-creator/scripts/compare_skills.py <自建目录> <上游目录> --a
 **自动档（借鉴 Anthropic 官方 run_loop，train/test 60/40 分层分集，防过拟合）**：
 
 ```bash
-python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> \
+python scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> \
   --holdout 0.4 --max-iterations 5 --improve-mode manual|cli --report <输出>.json
 ```
 
@@ -391,16 +394,15 @@ python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --
 
 ## 多客户端安装指引
 
-技能本体是通用目录格式 `skills/<name>/SKILL.md`，安装 = 把该目录放到目标客户端的 skills 目录，重启客户端生效。
+技能本体是通用目录格式 `skills/<name>/SKILL.md`，安装 = 把该目录放到目标客户端的 skills 目录，重启客户端生效。**完整安装运行手册见 `INSTALL.md`**（含全局/工作区选择、验证关卡、生命周期）。
 
 ### 直接放置到客户端目录
 
-四种客户端均可手动放置（以目标客户端官方文档为准）：
+三种已支持客户端均可手动放置（以目标客户端官方文档为准）：
 
-- **Claude Code**：`~/.claude/skills/<name>/`（用户级）；项目级放 `.claude/skills/<name>/`。技能触发依据是 `description`。
-- **OpenCode**：用户级 `~/.config/opencode/skills/<name>/SKILL.md`；项目级 `.opencode/skills/<name>/SKILL.md`；也可在 `opencode.json` 的 `skills.paths` 注册任意目录（loader 递归扫描 `**/SKILL.md`）。
-- **Codex (OpenAI)**：需要启用 experimental `skills` 特性；`name` ≤100 字符、`description` ≤500 字符单行；`~/.codex/skills/<name>/SKILL.md`，正文在 `/skills` 或 `$<skill-name>` 时才注入。
-- **DeepSeek Harness**：技能目录路径以当前版本官方文档为准（用户级通常位于该工具 config 目录下的 `skills/`，可设 `DEEPSEEK_HARNESS_ROOT` 覆盖）。
+- **Claude Code**：全局 `~/.claude/skills/<name>/`；工作区 `<项目根>/.claude/skills/<name>/`。同名时全局覆盖工作区；技能目录可以是符号链接。
+- **OpenCode**：全局 `~/.config/opencode/skills/<name>/`；工作区 `<项目根>/.opencode/skills/<name>/`；也可在 `opencode.json` 的 `skills.paths` 注册任意目录（loader 递归扫描 `**/SKILL.md`）。opencode 还兼容读 `~/.claude/skills/` 与 `~/.agents/skills/`——别在多个枢纽重复安装同一技能。
+- **Codex (OpenAI)**：全局 USER 域 `~/.agents/skills/<name>/`；工作区 REPO 域 `<项目根>/.agents/skills/<name>/`。`~/.codex/skills` 是 Codex 的 SYSTEM 域（内置技能），不要写入。注意 Codex 内置同名 `.system/skill-creator`，安装后选择器会并存两个。
 
 安装后验证：用一个真实小任务触发试运行，确认技能被正确加载、按指令执行。
 

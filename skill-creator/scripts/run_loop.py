@@ -12,7 +12,7 @@ Port from Anthropic's official claude-plugins-official skill-creator
   - Best description is selected by TEST score to avoid overfitting train.
 
 Usage:
-    python skill-creator/scripts/run_loop.py --eval-set <evals.json> --skill-dir <skill> \
+    python scripts/run_loop.py --eval-set <evals.json> --skill-dir <skill> \
         [--holdout 0.4] [--max-iterations 5] [--improve-mode manual|cli] \
         [--client claude] [--seed 42] [--report <out.json>]
 

@@ -58,10 +58,7 @@ tools: [claude, opencode, codex, deepseek]
 
 ## 资源路径基准
 
-本技能内部所有资源引用（`references/`、`scripts/`、`templates/`、`indexes/upstream.db`、`evolutions/`）均以**技能目录本身**为基准，而非当前工作目录：
-
-- **在当前模块内运行时**：真实路径为 `references/xxx.md`、`scripts/xxx.py`、`templates/AGENT.template.md`、`indexes/upstream.db`。
-- **安装到客户端后**：真实路径为客户端技能目录（如 `~/.config/opencode/skills/agent-creator/...`），以实际安装位置为准。
+本技能是**自包含完整体**：内部所有引用（`scripts/`、`references/`、`templates/`、`indexes/upstream.db`、`evolutions/`）一律以 **agent-creator 目录自身为根**书写，不依赖任何外部布局。脚本调用：在本技能目录内执行 `python scripts/xxx.py ...`；不在技能目录内执行时加目录前缀 `python "<技能目录>/scripts/xxx.py" ...`。定位本技能目录的方法：codex 的技能列表自带文件路径，直接使用；claude/opencode 按存在性依次探测——工作区候选 `<项目>/.claude/skills/agent-creator/`、`<项目>/.opencode/skills/agent-creator/`、`<项目>/.agents/skills/agent-creator/`；全局候选 `~/.claude/skills/agent-creator/`、`~/.config/opencode/skills/agent-creator/`、`~/.agents/skills/agent-creator/`。
 
 读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，需要结构规范时读 `references/agent-anatomy.md`，需要质量标准时读 `references/agent-quality-bar.md`，需要检索上游/索引细节时读 `references/agent-index.md`，进行对比择优时读 `references/agent-comparison.md`。
 
@@ -123,7 +120,7 @@ tools_clients: [claude, opencode, codex, deepseek]  # 可选：声明适用客�
 
 ## 创建流程（核心工作流）
 
-> **可独立安装**：本技能可脱离 PersonalWorkflow 仓库，作为独立技能安装到任意目标项目使用——自带角色澄清、脚手架、验证、对比、安装全流程，不依赖宿主仓库的目录结构，也不读取调用方已有的代理库。
+> **可独立安装**：本技能是自包含完整体，可安装到任意客户端/目标项目独立使用——自带角色澄清、脚手架、验证、对比、安装全流程，不依赖任何外部目录结构，也不读取调用方已有的代理库。安装运行手册见 `INSTALL.md`。
 >
 > **闭环（3 步）**：
 > 1. **按用户需求创建一个代理**（阶段 1-4）
@@ -135,14 +132,14 @@ tools_clients: [claude, opencode, codex, deepseek]  # 可选：声明适用客�
 先在**本技能自带的上游代理索引**中检索是否有可参考/采纳的现成代理，避免重复造轮子：
 
 ```bash
-python agent-creator/scripts/search_agent_index.py "<需求关键词>" [--source agency|ccgs|agency-zh] [--category X] [--limit 10]
-python agent-creator/scripts/search_agent_index.py --stats               # 索引状态
-python agent-creator/scripts/search_agent_index.py --list-categories     # 分类（division）分布
+python scripts/search_agent_index.py "<需求关键词>" [--source agency|ccgs|agency-zh] [--category X] [--limit 10]
+python scripts/search_agent_index.py --stats               # 索引状态
+python scripts/search_agent_index.py --list-categories     # 分类（division）分布
 ```
 
-- 索引文件 `agent-creator/indexes/upstream.db` 已随技能分发，无需联网即可检索。
+- 索引文件 `indexes/upstream.db` 已随技能分发，无需联网即可检索。
 - 覆盖三个上游代理仓库（msitarzewski/agency-agents、Donchitos/Claude-Code-Game-Studios、jnMetaCode/agency-agents-zh），含中文代理（`agency-zh`）；英文/中文关键词均可检索。索引细节见 `references/agent-index.md`。
-- 索引落后于上游时运行 `python agent-creator/scripts/build_agent_index.py` 重建。
+- 索引落后于上游时运行 `python scripts/build_agent_index.py` 重建。
 
 **决策分支：**
 - **有匹配候选** → 记录候选；照常创建（阶段 1-4），随后在阶段 5.5 与候选对比择优取最优。
@@ -169,7 +166,7 @@ python agent-creator/scripts/search_agent_index.py --list-categories     # 分�
 ### 阶段 3：设计与脚手架
 
 - 参考 `references/agent-template.md` 的四端字段兼容矩阵与 `references/agent-anatomy.md` 的结构规范；研究上游候选（阶段 0 命中）的身份表述、边界与协作写法作为范本。
-- 使用 `templates/AGENT.template.md` 骨架（或 `python agent-creator/scripts/create_agent.py --name <名> --mode subagent --out <目录>`）。
+- 使用 `templates/AGENT.template.md` 骨架（或 `python scripts/create_agent.py --name <名> --mode subagent --out <目录>`）。
 - 按「身份先于指令」与「最小权限」确定职责边界与工具列表。
 
 ### 阶段 4：编写 AGENT.md
@@ -179,7 +176,7 @@ python agent-creator/scripts/search_agent_index.py --list-categories     # 分�
 ### 阶段 5：运行自动验证
 
 ```bash
-python agent-creator/scripts/validate_agents.py [--dir <agents目录>] [--strict]
+python scripts/validate_agents.py [--dir <agents目录>] [--strict]
 ```
 
 验证器检查：frontmatter 有效性（YAML、`name` 格式、`description` 存在且 ≤300 字符、可选 `version` semver）、「职责边界」章节、工具/权限声明、正文非空、引用不悬空。offensive 类代理（渗透等）同样要求授权声明。
@@ -190,10 +187,10 @@ python agent-creator/scripts/validate_agents.py [--dir <agents目录>] [--strict
 
 ```bash
 # 对比单个代理
-python agent-creator/scripts/compare_agents.py <自建目录> <上游候选目录>
+python scripts/compare_agents.py <自建目录> <上游候选目录>
 
 # 对比某上游目录下的全部候选
-python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --all-candidates
+python scripts/compare_agents.py <自建目录> <上游目录> --all-candidates
 ```
 
 评分维度（详见 `references/agent-comparison.md`）：
@@ -252,11 +249,18 @@ python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --a
 
 ## 多客户端安装指引
 
-代理本体是单文件 `AGENT.md`（或含 references 的目录 `agents/<name>/`）。安装 = 放到目标客户端的 agents 目录，重启客户端生效。
+本技能自身的安装（作为技能装入客户端）：运行手册见 `INSTALL.md`（全局/工作区选择 + 验证关卡）。
 
-### 直接放置到客户端目录
+产出的**代理**本体是单文件 `AGENT.md`（或含 references 的目录 `agents/<name>/`）。安装 = 放到目标客户端的 agents 目录，重启客户端生效：
 
-四种客户端均可手动放置（以目标客户端官方文档为准）。不同客户端对代理的字段支持不同，安装时以目标客户端文档为准。
+| 端 | 代理目录（全局） | 代理目录（工作区） |
+|---|---|---|
+| claude | `~/.claude/agents/` | `<项目根>/.claude/agents/` |
+| opencode | `~/.config/opencode/agent/` | `<项目根>/.opencode/agent/` |
+| codex | 代理放置无官方约定（best-effort，以官方文档为准） | 同左 |
+| deepseek | 随版本，`DEEPSEEK_HARNESS_ROOT` 兜底 | 同左 |
+
+不同客户端对代理的字段支持不同（兼容矩阵见 `references/agent-template.md`），安装时以目标客户端文档为准。
 
 ## 相关技能
 

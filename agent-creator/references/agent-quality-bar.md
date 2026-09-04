@@ -1,6 +1,6 @@
 # 代理质量门槛（Agent Quality Bar）
 
-代理必须达到以下 **5 项质量检查** 才能视为合格，其中部分由 `agent-creator/scripts/validate_agents.py` 自动执行（标注「自动」）。
+代理必须达到以下 **5 项质量检查** 才能视为合格，其中部分由 `scripts/validate_agents.py` 自动执行（标注「自动」）。
 
 ## 5 项质量检查
 
@@ -36,10 +36,10 @@
 
 ```bash
 # 标准模式（警告不阻断）(默认扫 agents/ 或指定目录)
-python agent-creator/scripts/validate_agents.py [--dir <agents目录>]
+python scripts/validate_agents.py [--dir <agents目录>]
 
 # 严格模式（警告即失败，适合 CI）
-python agent-creator/scripts/validate_agents.py --strict
+python scripts/validate_agents.py --strict
 ```
 
 ## 验证器检查项一览

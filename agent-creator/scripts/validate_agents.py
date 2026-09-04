@@ -1,11 +1,11 @@
 """Validate agent definitions (AGENT.md) in the PersonalWorkflow repository.
 
-Part of the agent-creator skill (see agent-creator/SKILL.md).
+Part of the agent-creator skill (see SKILL.md).
 Checks frontmatter schema, identity/boundary/permission/collaboration
 sections, and dangling local references. Parallel to validate_skills.py.
 
 Usage:
-    python agent-creator/scripts/validate_agents.py [--dir <agents_dir>] [--strict]
+    python scripts/validate_agents.py [--dir <agents_dir>] [--strict]
 
 Exit code 0 = all passed, 1 = errors found (or warnings in strict mode).
 """
