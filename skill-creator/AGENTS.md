@@ -74,11 +74,9 @@ python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --sk
 
 ### 6. 安装到客户端
 
-```bash
-python tools/scripts/install_skill.py [--client <claude|opencode|codex|deepseek>] <技能目录>
-```
+将技能目录放置到目标客户端的安装目录；按客户端文档说明完成注册。
 
-安装后重启客户端生效；生命周期（更新/卸载/回滚）见 `tools/docs/lifecycle.md`。
+安装后重启客户端生效；后续更新/卸载/回滚由客户端工具或独立管理脚本处理。
 
 ### 7. 回馈稳定技能
 
@@ -88,7 +86,7 @@ python tools/scripts/install_skill.py [--client <claude|opencode|codex|deepseek>
 
 本技能内资源引用（`references/`、`scripts/`、`templates/`、`examples/`、`indexes/upstream.db`）均以**技能目录本身**为基准：
 
-- 在本技能随附的仓库内运行：`skill-creator/references/xxx.md`、`skill-creator/scripts/xxx.py`。
+- 在当前模块内运行时：`references/xxx.md`、`scripts/xxx.py`。
 - 安装到客户端后：以实际技能目录为准（如 `~/.config/opencode/skills/skill-creator/...`）。
 
 读取规则：references 文档**按需读取**；需要字段/分类时读 `references/skill-template.md`，结构规范读 `references/skill-anatomy.md`，质量标准读 `references/quality-bar.md`，写作规律（TDD 化/表述匹配失败类型/防借口）读 `references/skill-writing-guide.md`，索引细节读 `references/skill-index.md`，对比评分读 `references/skill-comparison.md`。
@@ -110,7 +108,7 @@ python tools/scripts/install_skill.py [--client <claude|opencode|codex|deepseek>
 | `templates/` | `SKILL.template.md`（骨架）、`evals.json.template`（触发测试模板） |
 | `indexes/upstream.db` | 检索上游（随技能分发，克隆即得） |
 
-## 相关技能
+## 其他创建器
 
 - `agent-creator` — 同构的代理创建器（技能沉淀到一定规模后，可升级为专职 Agent）
 - 技能 vs 代理取舍：可描述的步骤化流程 → 技能（本技能）；需要常驻角色/权限/协作 → 代理（`agent-creator`）

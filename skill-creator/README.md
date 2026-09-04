@@ -1,6 +1,6 @@
 # skill-creator
 
-创建和管理自定义 Skill 的目录。融合 5 个成熟 skill-creator 的实现精华（agentic-awesome-skills / Anthropic 官方 / MCPMarket / codex-skill-creator / agent-skill-creator）：证据驱动、渐进式披露、自由度匹配脆弱性、高信号命名、迭代测试循环、触发优化与治理化验证。
+创建自定义 Skill 的目录。融合 5 个成熟 skill-creator 的实现精华（agentic-awesome-skills / Anthropic 官方 / MCPMarket / codex-skill-creator / agent-skill-creator）：证据驱动、渐进式披露、自由度匹配脆弱性、高信号命名、迭代测试循环、触发优化与治理化验证。
 
 ## 上游外部仓库（索引来源）
 
@@ -61,14 +61,14 @@ skill-creator/
     react-best-practices/   # 多文件·渐进式披露范本
     loki-mode/              # 综合·复杂工作流范本
   evolutions/               # 对比择优学习记录（反馈闭环）
-  <skill-name>/             # 创建的单个技能实例（安装到客户端时使用 install_skill.py）
-    SKILL.md
+   <skill-name>/              # 创建的单个技能实例（按目标客户端文档安装）
+     SKILL.md
 ```
 
 ## 使用
 
-1. 参考本目录 `SKILL.md` 的技能创建方法论（10 阶段工作流：阶段 0 检索→9 安装回馈）
+1. 参考本目录 `SKILL.md` 的技能创建方法（10 阶段工作流）
 2. 使用 `scripts/create_skill.py` 脚手架或 `templates/SKILL.template.md` 作为骨架创建你的 Skill
 3. 运行自动验证：`python skill-creator/scripts/validate_skills.py --strict --dir <技能目录>`（失败必须修复）
-4. 安装到客户端：`python tools/scripts/install_skill.py [--client claude|opencode|codex|deepseek] <技能目录>`（重启客户端生效）
-5. 经验证的技能提交到仓库 `skills/<skill-name>/`（含 `evolutions/` 对比记录）
+4. 将产出的技能安装到目标客户端的 skills/ 目录，按客户端文档完成后续配置
+5. 经验证的技能归档到可分发位置

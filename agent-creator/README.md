@@ -1,6 +1,6 @@
 # agent-creator
 
-创建和管理自定义 Agent（代理）的目录。与 skill-creator 平行同构：skill 回答「怎么做」，agent 回答「谁来做」。
+创建自定义 Agent（代理）的目录。与 skill-creator 平行同构：skill 回答「怎么做」，agent 回答「谁来做」。
 
 ## 结构
 
@@ -27,8 +27,8 @@ agent-creator/
   templates/
     AGENT.template.md              # 新代理骨架
   evolutions/                      # 对比择优学习记录（反馈闭环）
-  <agent-name>/                    # 创建的单个代理实例（安装到客户端时复制该目录）
-    AGENT.md
+   <agent-name>/                     # 创建的单个代理实例（按目标客户端文档安装）
+     AGENT.md
 ```
 
 ## 使用
@@ -37,8 +37,8 @@ agent-creator/
 2. 先查上游代理索引（先查后建）：`python agent-creator/scripts/search_agent_index.py "<关键词>"`（如无现成再创建）
 3. 使用 `templates/AGENT.template.md` 作为骨架（或 `create_agent.py` 脚手架）
 4. 运行自动验证：`python agent-creator/scripts/validate_agents.py --dir <你的代理目录>`
-5. 安装到客户端：直接放置到目标客户端 agents 目录（或随附 tools/ 时用 `install_agent.py`）
-6. 经验证的代理归档到 `agents/<agent-name>/`
+5. 安装到客户端：直接放置到目标客户端 agents 目录，按客户端文档完成后续配置
+6. 经验证的代理归档到可分发位置
 
 ## 技能 vs 代理
 

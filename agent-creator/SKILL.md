@@ -15,7 +15,7 @@ tools: [claude, opencode, codex, deepseek]
 
 ## 概述
 
-本技能指导如何把**工作角色与职责边界**蒸馏为可复用、可验证、跨客户端安装的高质量代理（Agent）。代理与技能不同：技能是「任务怎么做」的指令集，代理是「谁来负责、以什么身份、带什么权限、怎么协作」的角色定义。四端客户端（claude/opencode/codex/deepseek-harness）的代理格式差异由 `references/agent-template.md` 统一承载，安装通过直接放置或（随附含 tools/ 时）复用其安装器完成。
+本技能指导如何把**工作角色与职责边界**蒸馏为可复用、可验证、跨客户端安装的高质量代理（Agent）。代理与技能不同：技能是「任务怎么做」的指令集，代理是「谁来负责、以什么身份、带什么权限、怎么协作」的角色定义。四端客户端（claude/opencode/codex/deepseek-harness）的代理格式差异由 `references/agent-template.md` 统一承载，安装通过直接放置完成。
 
 一个代理 = **身份定义 + 职责边界 + 工具权限 + 协作协议**，用 AGENT.md（含 frontmatter）表达。
 
@@ -60,7 +60,7 @@ tools: [claude, opencode, codex, deepseek]
 
 本技能内部所有资源引用（`references/`、`scripts/`、`templates/`、`indexes/upstream.db`、`evolutions/`）均以**技能目录本身**为基准，而非当前工作目录：
 
-- **在本仓库内运行**：真实路径为 `agent-creator/references/xxx.md`、`agent-creator/scripts/xxx.py`、`agent-creator/templates/AGENT.template.md`、`agent-creator/indexes/upstream.db`、`agent-creator/evolutions/xxx.md`。
+- **在当前模块内运行时**：真实路径为 `references/xxx.md`、`scripts/xxx.py`、`templates/AGENT.template.md`、`indexes/upstream.db`。
 - **安装到客户端后**：真实路径为客户端技能目录（如 `~/.config/opencode/skills/agent-creator/...`），以实际安装位置为准。
 
 读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，需要结构规范时读 `references/agent-anatomy.md`，需要质量标准时读 `references/agent-quality-bar.md`，需要检索上游/索引细节时读 `references/agent-index.md`，进行对比择优时读 `references/agent-comparison.md`。
@@ -74,7 +74,7 @@ agents/<agent-name>/
 └── README.md            ← 可选：附加说明
 ```
 
-**关键规则**：只有 `AGENT.md` 是必需的。各客户端的代理文件格式与安装位置见 `references/agent-template.md` 与 `tools/scripts/client_paths.py`。
+**关键规则**：只有 `AGENT.md` 是必需的。各客户端的代理文件格式与安装位置见 `references/agent-template.md`。
 
 ## 前置元数据字段规范
 
@@ -213,12 +213,11 @@ python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --a
 
 安装 = 把 AGENT.md（或代理目录）放到目标客户端的 agents 目录，重启后调用验证。
 
-- **通用方式（独立可用）**：直接放置到「多客户端安装指引」所列客户端目录。
-- **若随附含 tools/ 的仓库（可选便利）**：用仓库安装器 `python tools/scripts/install_agent.py [--client <...>] <代理目录>`（支持四端路径解析 + manifest 生命周期记账）。
+- **直接放置**：按目标客户端官方文档说明，将文件放置到对应目录即可。
 
 ### 阶段 8：沉淀稳定代理
 
-代理稳定使用后：完善元数据（source/version/tags/tools_clients）→ 归档到可分发位置（若在 PersonalWorkflow 仓库内则按功能放入 `agents/<顶层分类>/<name>/`，分类不存在则创建；通用代理如 `agents/code-quality/`，无「留顶层」例外）→ 含测试记录一并沉淀。
+代理稳定使用后：完善元数据 → 归档到技能库或发布渠道，含测试记录一并沉淀。
 
 ## 质量检查清单（提交/入库前）
 
@@ -255,29 +254,9 @@ python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --a
 
 代理本体是单文件 `AGENT.md`（或含 references 的目录 `agents/<name>/`）。安装 = 放到目标客户端的 agents 目录，重启客户端生效。
 
-### 通用方式：直接放置到客户端目录
+### 直接放置到客户端目录
 
-不依赖任何仓库工具，四种客户端均可手动放置（以目标客户端官方文档为准）：
-
-- **Claude Code**：`~/.claude/agents/<name>.md`（或目录）
-- **OpenCode**：`~/.config/opencode/agent/<name>.md`；项目级 `.opencode/agent/`
-- **Codex**：`~/.codex/agents/<name>.md`
-- **DeepSeek Harness**：随版本（可用 `DEEPSEEK_HARNESS_ROOT` 覆盖）
-
-注意：不同客户端对代理 frontmatter 的字段支持不同（mode/model/permission 等），安装时以目标客户端文档为准；`references/agent-template.md` 有完整兼容矩阵。
-
-### 若随附于含 tools/ 的仓库（可选便利）
-
-当本技能随附的目录同时提供 `tools/scripts/install_agent.py` 时（如 PersonalWorkflow 仓库），可用安装器完成路径解析 + manifest 生命周期记账：
-
-```bash
-python tools/scripts/install_agent.py --client opencode agents/<name>   # 指定客户端
-python tools/scripts/install_agent.py agents/<name>                     # 自动探测
-```
-
-生命周期（更新/卸载/回滚）同样由该仓库工具管理。
-
-> **独立安装时无 tools/**：脱离含 tools/ 的仓库单独安装本技能时，用上面的「通用方式」手动放置即可——本技能目录不捆绑安装器。
+四种客户端均可手动放置（以目标客户端官方文档为准）。不同客户端对代理的字段支持不同，安装时以目标客户端文档为准。
 
 ## 相关技能
 

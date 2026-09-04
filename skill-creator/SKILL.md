@@ -64,10 +64,10 @@ skill-creator/
 
 ## 资源路径基准
 
-本技能内部所有资源引用（`references/`、`scripts/`、`templates/`、`examples/`）均以**技能目录本身**为基准，而非当前工作目录：
+本技能内部所有资源引用均以**自身目录**为基准：
 
-- **在本仓库内运行**：真实路径为 `skill-creator/references/xxx.md`、`skill-creator/scripts/validate_skills.py`、`skill-creator/templates/SKILL.template.md`。
-- **安装到客户端后**：真实路径为客户端技能目录（如 `~/.config/opencode/skills/skill-creator/references/xxx.md`、`~/.claude/skills/skill-creator/...`、`~/.codex/skills/skill-creator/...`），以实际安装位置为准。
+- **按模块路径运行时**：`skill-creator/references/xxx.md`、`skill-creator/scripts/validate_skills.py`。
+- **安装到客户端后**：以实际安装位置的相对路径为准（如 `references/xxx.md`）。
 
 读取规则：references 文档**按需读取**（渐进式披露），需要字段/分类细节时读 `references/skill-template.md`，需要结构规范时读 `references/skill-anatomy.md`，需要质量标准时读 `references/quality-bar.md`，需要写作规律（TDD 化/表述匹配失败类型/防借口/微测）时读 `references/skill-writing-guide.md`；不要一次性全部注入。
 
@@ -186,7 +186,7 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 
 ## 创建流程（核心工作流）
 
-> **可独立安装**：本技能可脱离 PersonalWorkflow 仓库，作为独立技能安装到任意目标项目使用——自带上游检索、脚手架、验证、对比、安装全流程，不依赖宿主仓库的目录结构，也不读取调用方已有的技能库。
+> **可独立安装**：作为独立模块，本技能不依赖宿主仓库的目录结构。
 >
 > **闭环（3 步）**：
 > 1. **按用户需求创建一个技能**（阶段 1-4）
@@ -393,40 +393,20 @@ python skill-creator/scripts/run_loop.py --eval-set <技能目录>/evals.json --
 
 技能本体是通用目录格式 `skills/<name>/SKILL.md`，安装 = 把该目录放到目标客户端的 skills 目录，重启客户端生效。
 
-### 通用方式：直接放置到客户端目录
+### 直接放置到客户端目录
 
-不依赖任何仓库工具，四种客户端均可手动放置（以目标客户端官方文档为准）：
+四种客户端均可手动放置（以目标客户端官方文档为准）：
 
 - **Claude Code**：`~/.claude/skills/<name>/`（用户级）；项目级放 `.claude/skills/<name>/`。技能触发依据是 `description`。
 - **OpenCode**：用户级 `~/.config/opencode/skills/<name>/SKILL.md`；项目级 `.opencode/skills/<name>/SKILL.md`；也可在 `opencode.json` 的 `skills.paths` 注册任意目录（loader 递归扫描 `**/SKILL.md`）。
-- **Codex（OpenAI）**：需要启用 experimental `skills` 特性；`name` ≤100 字符、`description` ≤500 字符单行；`~/.codex/skills/<name>/SKILL.md`，正文在 `/skills` 或 `$<skill-name>` 时才注入。
+- **Codex (OpenAI)**：需要启用 experimental `skills` 特性；`name` ≤100 字符、`description` ≤500 字符单行；`~/.codex/skills/<name>/SKILL.md`，正文在 `/skills` 或 `$<skill-name>` 时才注入。
 - **DeepSeek Harness**：技能目录路径以当前版本官方文档为准（用户级通常位于该工具 config 目录下的 `skills/`，可设 `DEEPSEEK_HARNESS_ROOT` 覆盖）。
 
 安装后验证：用一个真实小任务触发试运行，确认技能被正确加载、按指令执行。
 
-### 若随附于含 tools/ 的仓库（可选便利）
-
-当本技能随附的目录同时提供 `tools/scripts/install_skill.py` 时（如 PersonalWorkflow 仓库），可用安装器完成路径解析 + manifest 生命周期记账：
-
-```bash
-python tools/scripts/install_skill.py --client <claude|opencode|codex|deepseek> <技能目录>   # 指定客户端
-python tools/scripts/install_skill.py <技能目录>                                            # 自动探测已安装客户端
-python tools/scripts/install_skill.py <技能目录> --dry-run                                   # 只预览目标路径
-```
-
-生命周期（升级/卸载/回滚）同样由该仓库工具管理：
-
-```bash
-python tools/scripts/update_skill.py <技能名> --source <新版目录>
-python tools/scripts/uninstall_skill.py <技能名>
-python tools/scripts/rollback_skill.py <技能名>
-```
-
-> **独立安装时无 tools/**：脱离含 tools/ 的仓库单独安装本技能时，用上面的「通用方式」手动放置即可——本技能目录不捆绑安装器。
-
 ## 相关技能
 
-- `agent-creator` — 创建自定义 Agent（技能沉淀到一定规模后，可升级为专职 Agent）
+- `agent-creator` — 同构的代理创建器（技能沉淀到一定规模后，可升级为专职 Agent）
 
 ## 常见问题
 

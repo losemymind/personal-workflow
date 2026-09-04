@@ -12,7 +12,7 @@ agent-creator 是一个**可独立安装**到 LLM 客户端（claude / opencode 
 - 需要把代理安装到 claude / opencode / codex / deepseek 客户端的 agents 目录
 - 用户提到触发词：「创建agent」「写个代理」「agent-creator」「把这个角色做成代理」
 
-**技能 vs 代理取舍**：可描述的步骤化流程 → 技能（用 `skill-creator`）；需要常驻角色/权限/协作 → 代理（本技能）。
+**技能 vs 代理取舍**：可描述的步骤化流程 → 技能（用创建器）；需要常驻角色/权限/协作 → 代理（本技能）。
 
 ## 工作流（引导型：每步向用户确认后再执行）
 
@@ -60,11 +60,9 @@ python agent-creator/scripts/compare_agents.py <自建目录> <上游目录> --a
 
 ### 6. 安装到客户端
 
-```bash
-python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>] <代理目录>
-```
+将代理目录放置到客户端的 agents/ 目录；使用对应客户端的安装器或 manifest 标记完成注册。
 
-安装后重启客户端生效；生命周期（更新/卸载/回滚）见 `tools/docs/lifecycle.md`。
+安装后重启客户端生效；生命周期（更新/卸载/回滚）由客户端工具或独立管理脚本处理。
 
 ### 7. 回馈稳定代理
 
@@ -74,8 +72,8 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 
 本技能内资源引用（`references/`、`scripts/`、`templates/`）均以**技能目录本身**为基准：
 
-- 在本技能随附的仓库内运行：`agent-creator/references/xxx.md`、`agent-creator/scripts/xxx.py`。
-- 安装到客户端后：以实际技能目录为准（如 `~/.config/opencode/skills/agent-creator/...`）。
+- 在当前模块内运行时：`references/xxx.md`、`scripts/xxx.py`。
+- 安装到客户端后：以实际技能目录为准。
 
 读取规则：references 文档**按需读取**；需要字段/四端差异时读 `references/agent-template.md`，结构规范读 `references/agent-anatomy.md`，质量标准读 `references/agent-quality-bar.md`，索引检索/更新读 `references/agent-index.md`，对比择优读 `references/agent-comparison.md`。
 
@@ -95,8 +93,8 @@ python tools/scripts/install_agent.py [--client <claude|opencode|codex|deepseek>
 
 ## 相关技能
 
-- `skill-creator` — 同构的技能创建器（代理职责内的「怎么做」环节用技能承载）
-- 技能 vs 代理取舍：可描述的步骤化流程 → 技能（`skill-creator`）；需要常驻角色/权限/协作 → 代理（本技能）
+- 另一类创建器 — 同构的技能创建器（代理职责内的「怎么做」环节用技能承载）
+- 技能 vs 代理取舍：可描述的步骤化流程 → 技能（创建器）；需要常驻角色/权限/协作 → 代理（本技能）
 
 ## 设计原则
 
