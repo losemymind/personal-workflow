@@ -1,7 +1,7 @@
 # PersonalWorkflow 交接文档（HANDOFF）
 
 > 用途：新会话快速恢复上下文。读完本文件即可接手开发。
-> 生成日期：2026-09-04 ｜ 最近提交见 `git log --oneline -5`（基线：本轮「skill-creator 全面审计 10 项修复 + 生命周期三缺陷修复（卸载不备份语义）」提交）
+> 生成日期：2026-09-04 ｜ 最近提交见 `git log --oneline -5`（基线：本轮「交接提示语输出经验（可整段复制代码块 + 自包含内容）写入根 AGENTS 与本文件 §6」提交；上一轮为「skill-creator 全面审计 10 项修复 + 生命周期三缺陷修复」4c0f4d7）
 ## 1. 这是什么
 
 个人工作流工具库，跑通 **检索上游 → 创建 → 对比择优 → 验证 → 安装 → 回馈** 的完整闭环。支持四个 LLM 客户端：**claude / opencode / codex / deepseek-harness**。仓库远程：`https://github.com/losemymind/personal-workflow.git`（分支 `main`）。
@@ -203,7 +203,7 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
    python tools/scripts/build_catalog.py --check
    ```
 6. 涉及副作用（安装/提交/推送）先向用户确认（引导不自动）
-7. **写好本交接文件后，向用户输出「新会话交接提示语」**（即下列新会话开场提示的完整文本），供用户复制到下一个会话使用
+7. **写好本交接文件后，向用户输出「新会话交接提示语」**：以下列新会话开场提示的完整文本为准，用**可整段复制的代码块**输出（含本轮基线提交号 + 一句话摘要），供用户直接粘贴到下一个会话使用
 
 ## 7. 参考
 
