@@ -58,6 +58,36 @@ def test_aggregate_benchmark_produces_json_and_md(tmp_path):
     assert "Pass Rate" in md and "Delta" in md
 
 
+def test_aggregate_benchmark_merges_analyzer_notes(tmp_path):
+    from conftest import run_script
+
+    ws = _build_workspace(tmp_path)
+    notes_file = tmp_path / "notes.json"
+    notes_file.write_text(
+        json.dumps(
+            ["断言'输出为 PDF'在两配置均 100% 通过——可能不区分技能价值", "eval 3 方差大，疑似 flaky"],
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    r = run_script(
+        "skill-creator/scripts/aggregate_benchmark.py", str(ws),
+        "--skill-name", "pr-summarizer", "--notes", str(notes_file),
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+    bench = json.loads((ws / "benchmark.json").read_text(encoding="utf-8-sig"))
+    assert len(bench["notes"]) == 2
+    assert "flaky" in bench["notes"][1]
+
+    bad = tmp_path / "bad-notes.json"
+    bad.write_text(json.dumps({"not": "an array"}), encoding="utf-8")
+    r = run_script(
+        "skill-creator/scripts/aggregate_benchmark.py", str(ws),
+        "--skill-name", "pr-summarizer", "--notes", str(bad),
+    )
+    assert r.returncode == 1
+
+
 def test_run_eval_heuristic_reports_summary(tmp_path):
     from conftest import run_script
 

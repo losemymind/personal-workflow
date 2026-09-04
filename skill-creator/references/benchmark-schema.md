@@ -104,6 +104,16 @@
 ```
 
 > 注意：`expectations[].text` / `.passed` / `.evidence` 三个字段名是视图与汇总的约定，不要改名为其他写法。
+>
+> `grading.json` 由**评分子代理**产出（`agents/grader.md`，拉起或内联执行均可）；完整字段（claims / user_notes_summary / eval_feedback 等）见该文件。
+
+## analyzer 笔记（aggregate_benchmark --notes 输入）
+
+分析子代理（`agents/analyzer.md` 模式二）产出的观察笔记为 **JSON 字符串数组**，经脚本合并进 `benchmark.json` 的 `notes`：
+
+```bash
+python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <名> --notes <notes文件>
+```
 
 ## timing.json（可选，运行计时）
 

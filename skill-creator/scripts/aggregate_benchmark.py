@@ -9,13 +9,16 @@ Reads grading.json / timing.json from a workspace layout and produces:
   - <dir>/benchmark.md    — human-readable table (pass rate / time / tokens)
 
 Usage:
-    python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <name> [--skill-path <path>] [--config-a with_skill] [--config-b without_skill]
+    python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <name> [--skill-path <path>] [--notes <notes.json>]
 
 Layouts supported:
     <workspace>/iteration-N/
     └── eval-<name>/
         ├── with_skill/run-1/grading.json   (+ optional timing.json)
         └── without_skill/run-1/grading.json
+
+--notes merges analyzer observations (a JSON array of strings produced by the
+analyzer subagent, see agents/analyzer.md mode 2) into benchmark.json's notes.
 """
 
 import argparse
@@ -232,12 +235,25 @@ def generate_markdown(benchmark: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def load_notes(notes_path: Path) -> list[str]:
+    """Load analyzer notes: a JSON array of strings, or an object with a notes array."""
+    data = json.loads(notes_path.read_text(encoding="utf-8-sig"))
+    if isinstance(data, dict):
+        if "notes" not in data or not isinstance(data["notes"], list):
+            raise ValueError("object-shaped notes file must contain a 'notes' array")
+        data = data["notes"]
+    if not isinstance(data, list) or not all(isinstance(n, str) for n in data):
+        raise ValueError("notes file must be a JSON array of strings")
+    return data
+
+
 def main() -> int:
     configure_utf8_output()
     parser = argparse.ArgumentParser(description="Aggregate benchmark run results into summary statistics")
     parser.add_argument("benchmark_dir", type=Path, help="Path to the workspace iteration directory")
     parser.add_argument("--skill-name", default="", help="Name of the skill being benchmarked")
     parser.add_argument("--skill-path", default="", help="Path to the skill being benchmarked")
+    parser.add_argument("--notes", type=Path, help="Analyzer notes file (JSON array of strings) merged into benchmark.json notes")
     parser.add_argument("--output", "-o", type=Path, help="Output path for benchmark.json (default: <dir>/benchmark.json)")
     args = parser.parse_args()
 
@@ -246,6 +262,15 @@ def main() -> int:
         return 1
 
     benchmark = generate_benchmark(args.benchmark_dir, args.skill_name, args.skill_path)
+    if args.notes:
+        if not args.notes.exists():
+            print(f"Notes file not found: {args.notes}")
+            return 1
+        try:
+            benchmark["notes"] = benchmark.get("notes", []) + load_notes(args.notes)
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"Invalid notes file {args.notes}: {e}")
+            return 1
     output_json = args.output or (args.benchmark_dir / "benchmark.json")
     output_md = output_json.with_suffix(".md")
     output_json.write_text(json.dumps(benchmark, indent=2, ensure_ascii=False), encoding="utf-8")

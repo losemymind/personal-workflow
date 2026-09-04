@@ -1,7 +1,7 @@
 # PersonalWorkflow 交接文档（HANDOFF）
 
 > 用途：新会话快速恢复上下文。读完本文件即可接手开发。
-> 生成日期：2026-09-04 ｜ 最近提交见 `git log --oneline -5`（基线：4fe6a67 + 本次「四端双作用域安装 + 双创建器自包含」提交）
+> 生成日期：2026-09-04 ｜ 最近提交见 `git log --oneline -5`（基线：本轮「eval agent 编排采纳（agents/ 三件套 + SKILL.md 拉起编排 + --notes）+ docs-refs 基线遗留修复」提交）
 ## 1. 这是什么
 
 个人工作流工具库，跑通 **检索上游 → 创建 → 对比择优 → 验证 → 安装 → 回馈** 的完整闭环。支持四个 LLM 客户端：**claude / opencode / codex / deepseek-harness**。仓库远程：`https://github.com/losemymind/personal-workflow.git`（分支 `main`）。
@@ -39,10 +39,11 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 - 脚本：`search_index.py`（检索/--source/stats）、`build_index.py`（多源/增量）、`compare_skills.py`（质量6维+结构4维评分）、`create_skill.py`（脚手架）、`validate_skills.py`（严格验证）、`run_trigger_tests.py`（触发启发式）
 - `references/`：template/anatomy/quality-bar/index/comparison/**skill-writing-guide**（写作规律：TDD 化·表述匹配失败类型·防借口·措辞微测——反哺自 obra/superpowers writing-skills）
 - `examples/`：6 个上游学习样本（MIT，验证豁免）；`evolutions/`：对比学习记录（pr-summarizer、2026-09-03 借鉴 Anthropic 官方量化 eval 引擎、code-review-skill 导入、**2026-09-03 采纳 superpowers writing-skills 方法论**）
-- 量化 eval 引擎（移植自 Anthropic claude-plugins-official）：`scripts/run_eval.py`（heuristic/cli 双模式）、`run_loop.py`（description 自动优化，train/test 60/40 防过拟合）、`aggregate_benchmark.py`（benchmark.json+md，纯 stdlib）、`references/benchmark-schema.md`（schema）——全部客户端无关，默认 heuristic 无需外部 CLI
+- 量化 eval 引擎（移植自 Anthropic claude-plugins-official）：`scripts/run_eval.py`（heuristic/cli 双模式）、`run_loop.py`（description 自动优化，train/test 60/40 防过拟合）、`aggregate_benchmark.py`（benchmark.json+md，纯 stdlib；`--notes` 合并分析笔记）、`references/benchmark-schema.md`（schema）——全部客户端无关，默认 heuristic 无需外部 CLI
+- **eval agent 编排（2026-09-04 移植自官方）**：`skill-creator/agents/grader.md`（断言打分→grading.json）、comparator.md（盲测 A/B→comparison.json）、analyzer.md（复盘改进建议 / 基准模式笔记）——由 SKILL.md 阶段 5/5.5/6 按需拉起子代理执行（语义判断），脚本负责确定性聚合；客户端无子代理派发时主持会话按同一份指令内联完成。记录 `evolutions/2026-09-04-adopt-official-agent-orchestration.md`
 - **description 上限 1024**：验证器/模板/质量条/参考全部统一（触发场景优先 + 一句能力定位，禁流程摘要——E 规律）；`description = 何时用不是做什么`
 - `INSTALL.md`：安装运行手册（第 0 步问全局/工作区 → 3 端落点 → 3 道验证关卡 → 交付；手册自身也自包含，不引用外部工具）
-- **自包含完整体**：内部所有引用以技能目录为根（`python scripts/...`、`references/...`、`indexes/upstream.db`），不引用任何外部资源/文档；「资源路径基准」含各端目录定位规程
+- **自包含完整体**：内部所有引用以技能目录为根（`python scripts/...`、`references/...`、`<技能目录>/indexes/upstream.db`），不引用任何外部资源/文档；「资源路径基准」含各端目录定位规程
 - 验证器安装可移植：支持 `--dir .`（安装副本自校验）；模块式自指引用（`<技能名>/...` 前缀）按技能目录解析
 - `opencode.json` 已注册 `skills.paths = ["skill-creator", "agent-creator"]`
 
@@ -63,7 +64,7 @@ AGENTS.md                 # 总编排/分发入口：判定需求→按需安装
 - `install_skill.py`：四端安装（manifest 标记 `.personal-workflow-manifest.json`）；`--scope global|workspace`，未指定时交互询问；工作区强制装到 git 仓库根（三端从 cwd 向上扫描到仓库根），非仓库环境礼貌报错。`install_agent.py` 尚未加 --scope（同构待补）
 - `build_catalog.py`：能力目录生成器（`skills/CATALOG.md` + `agents/CATALOG.md`，`--check` 防漂移；agent 条目渲染 `maturity` 字段；**递归扫描子目录** `agents/**/AGENT.md`，agent 条目按顶层类别分组渲染——`ue-game-studio` / `academic` / `code-quality`，无「留顶层」例外）
 - `update/uninstall/rollback_skill.py` + `_agent.py`：生命周期（备份至 `~/.personal-workflow/backups/`）；工作区安装的生命周期用 `--dest <项目根>/<端目录>`
-- `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）；含「模块根探针」（自包含模块子目录文档的引用按模块根解析，如 `skill-creator/references/` 中的 `indexes/upstream.db`）
+- `check_docs_refs.py`：md 引用与 git 索引的大小写敏感校验（零误报）；含「模块根探针」（自包含模块子目录文档的引用按模块根解析，如 `skill-creator/references/` 中的裸引用 indexes/upstream.db 解析为 `skill-creator/indexes/upstream.db`）
 - deepseek 路径为 best-effort（`DEEPSEEK_HARNESS_ROOT` 覆盖），未实测
 
 ### 按需安装 + 创建决策（能力目录）
@@ -127,9 +128,12 @@ python skill-creator/scripts/validate_skills.py --strict --dir skills/x
 python agent-creator/scripts/create_agent.py --name x --mode subagent --no-interactive
 python agent-creator/scripts/validate_agents.py --strict --dir agents/x
 
- # 对比择优（有上游候选时）
+# 对比择优（有上游候选时）
  python skill-creator/scripts/compare_skills.py <自建目录> <上游目录>
  python agent-creator/scripts/compare_agents.py <自建目录> <上游目录>
+
+# 量化基准（脚本打底 → 拉起子代理判断 → 脚本聚合收尾；子代理指令在 skill-creator/agents/）
+python skill-creator/scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <名> [--notes <分析笔记json>]
 
 # 生命周期
 python tools/scripts/update_skill.py <名> --source <新版>   # 代理用 _agent 版同构
@@ -157,7 +161,9 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | 按需安装 + 创建决策（分层） | ✅ CATALOG.md 生成器 + 生产器独立化（闭环 3 步，不含编排）+ 编排收敛到根 AGENTS（A vs B 谁优用谁） |
 | agent-creator evolutions | ✅ 首个真实记录：`2026-09-03-compare-migrated-ue-agents.md`（30 个迁移代理批量对比，全部自建更优/持平） |
 | skill-creator evolutions | ✅ 反馈闭环记录：`2026-09-03-borrow-upstream-quant-eval.md`（Anthropic 官方量化 eval）、`2026-09-03-import-code-review-skill.md`、`2026-09-03-adopt-superpowers-writing-skills.md` |
-| **量化 eval 引擎（移植自 Anthropic 官方）** | ✅ `scripts/run_eval.py`（heuristic/cli）、`run_loop.py`（train/test 60/40 优化）、`aggregate_benchmark.py`（benchmark.json+md）、`references/benchmark-schema.md`；四端通用、默认 heuristic 无需 CLI |
+| **量化 eval 引擎（移植自 Anthropic 官方）** | ✅ `scripts/run_eval.py`（heuristic/cli）、`run_loop.py`（train/test 60/40 优化）、`aggregate_benchmark.py`（benchmark.json+md，`--notes` 合并分析笔记）、`references/benchmark-schema.md`；四端通用、默认 heuristic 无需 CLI |
+| **eval agent 编排（官方 agents/ 三件套移植）** | ✅ 2026-09-04：`skill-creator/agents/`（grader/comparator/analyzer 三件套）+ SKILL.md 阶段 5/5.5/6「脚本打底 → 拉起子代理判断 → 脚本聚合收尾」编排 + `--notes` 合并（38 测试通过）；真实任务端到端试跑待做 |
+| **docs-refs 基线遗留失败修复** | ✅ 2026-09-04 发现 4d17071 基线 `check_docs_refs.py` 即失败（HANDOFF 裸引用 indexes/upstream.db 无法在 docs/ 解析），已改为模块根限定表述 |
 | 文档引用一致性检查器 | ✅ 零误报 |
 | **入库准入规则 + 审计文件（AGENTS/SKILLS-AUDIT）** | ✅ 根 AGENTS 已加四条规则（+提交前收尾交接）；`docs/AGENTS-AUDIT.md`（32 代理）+ `docs/SKILLS-AUDIT.md`（2 技能）已建 |
 | **30 个 UEGameStudio 迁移代理补走 agent-creator** | ✅ 已完成：academic×5 + ue-game-studio×25 逐一对比择优（上游 agency/ccgs/agency-zh）→ 结论自建更优/持平 → 审计转合规 |
@@ -172,8 +178,8 @@ python tools/scripts/build_catalog.py --check   # 目录同步检查（exit 0）
 | **双创建器自包含完整体** | ✅ 内部引用一律以技能目录为根（`python scripts/...`），不引用外部资源/文档；`check_docs_refs.py` 增模块根探针；脚本 usage 同步 |
 | **opencode 路径修正（Windows）** | ✅ 配置根 `~/.config` 而非 `%APPDATA%`（实证 `%APPDATA%\opencode` 不被读取）；回归测试已钉住 |
 | **codex 路径修正** | ✅ USER 域 `~/.agents/skills`（原矩阵指向 `~/.codex/skills` SYSTEM 域）；注意 Codex 内置 `.system/skill-creator` 同名并存 |
-| **pr-summarizer/code-reviewer 错装迁移** | ⚠️ 旧副本在 `%APPDATA%\opencode`（不被读取）；路径已修复，待用户确认后用安装器重装到 `~/.config\opencode` |
-| **opencode 真实安装待重启验证** | ⚠️ 路径修复后的真实安装尚未执行（含迁移），未对任何真实客户端目录做过安装 |
+| **pr-summarizer/code-reviewer 错装迁移** | ✅ 2026-09-04 用安装器重装到 `~/.config\opencode`（skills\pr-summarizer + agent\code-reviewer，带 manifest）；`%APPDATA%\opencode` 旧副本已删除 |
+| **opencode 真实安装待重启验证** | ⚠️ 真实安装已执行（2026-09-04 迁移重装），加载效果待 opencode 重启后确认 |
 | **UEGameStudio 30 代理运行时验证** | ⚠️ 全为 `static-verified`，需在真实 UE Editor / 目标项目试跑后逐档升 `runtime-verified`，并同步 CATALOG |
 | **上游索引更新频率** | 建议定期用 `--source <单源>` 手动同步（技能/代理各自脚本） |
 | **新技能/代理持续沉淀** | 按需用本仓库流程创建后回馈到 skills/、agents/（重跑 build_catalog.py） |

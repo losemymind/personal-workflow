@@ -127,10 +127,11 @@ skills/<skill-name>/
 ├── scripts/              ← 可选：可执行辅助脚本（可复现/重复任务）
 ├── templates/            ← 可选：输出模板
 ├── references/           ← 可选：参考文档（>300 行的大文件附目录；多领域按文件拆分）
+├── agents/               ← 可选：子代理指令文件（由 SKILL.md 按需拉起，不自动加载）
 └── README.md             ← 可选：附加说明（跨客户端差异、维护记录）
 ```
 
-关键规则：**只有 `SKILL.md` 是必需的**。`scripts/` 用于确定性/重复性任务（脚本被执行，不进上下文）；`references/` 用于按需注入的深度文档。
+关键规则：**只有 `SKILL.md` 是必需的**。`scripts/` 用于确定性/重复性任务（脚本被执行，不进上下文）；`references/` 用于按需注入的深度文档；`agents/` 存子代理角色指令——SKILL.md 在流程中拉起子代理时让其读入（语义判断类工作），与 `scripts/`（确定性可复现工作）分工互补。
 
 ## 前置元数据字段规范
 
@@ -269,7 +270,9 @@ python scripts/validate_skills.py --dir <skills目录>  # 校验指定目录
 
 验证器检查项（完整列表见 `references/quality-bar.md`）：frontmatter 有效性（YAML、`name` 与目录名一致、`description` ≤1024 字符、`risk` 合法、`version` 语义化格式）、`source`/`source_repo`/`source_type`、`date_added` 格式、中英文「何时使用」章节、示例章节、限制章节、offensive 技能的安全免责声明与用户确认门、以及本地链接是否悬空。存在错误时 exit code 为 1，严格模式下警告也会导致失败。
 
-技能正文稳定后，用两套触发评测（`templates/evals.json.template` 为 evals 模板）：
+技能正文稳定后开始量化评估。采用「**确定性脚本打底 + SKILL.md 拉起子代理判断 + 脚本聚合收尾**」的混合编排（子代理指令在 `agents/`，移植自 Anthropic 官方；子代理负责语义判断，脚本负责可复现的确定性工作）：
+
+**第 1 步：触发评测（确定性脚本，先跑）**——`templates/evals.json.template` 为 evals 模板：
 
 ```bash
 # 1) 确定性触发启发式（无外部 CLI，默认）
@@ -280,13 +283,25 @@ python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技
 
 输出每条查询的触发判定 + 汇总（passed/total、precision、recall）；`--json` 可机器读取。
 
-**量化迭代基准（借鉴 Anthropic 官方，客户端无关）**：对「有技能 vs 无技能基线」组织 `<workspace>/iteration-N/eval-<名>/<with_skill|without_skill>/run-1/grading.json`（+ `timing.json`），再汇总为带 mean±stddev 与 delta 的基准：
+**第 2 步：输出打分（拉起评分子代理）**：对每个 eval 跑完「有技能」与「无技能（基线）」两组运行、产物按「工作区布局」落到 `<workspace>/iteration-N/eval-<名>/<with_skill|without_skill>/run-N/` 后，**拉起评分（grader）子代理**：提示词中给出 `expectations` / `transcript_path` / `outputs_dir`，令其读入 `agents/grader.md` 执行——逐条断言判定、核验隐含声明、审视断言质量，把 `grading.json` 写进每个 run 目录（字段契约见 `references/benchmark-schema.md`）。
+
+**第 3 步：聚合（确定性脚本）**：
 
 ```bash
 python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <名>
 ```
 
-产物 `benchmark.json`（+ `benchmark.md`），直接读 delta 判断技能相对基线的真实增益；高方差 eval 视为 flaky 需更多 run。Schema 见 `references/benchmark-schema.md`。
+读取各 `grading.json`（+ `timing.json`）汇总为带 mean±stddev 与 delta 的 `benchmark.json`（+ `benchmark.md`）；直接读 delta 判断技能相对基线的真实增益。
+
+**第 4 步：模式分析（拉起分析子代理）**：**拉起分析（analyzer）子代理**，按 `agents/analyzer.md` 模式二分析 `benchmark.json`——逐断言模式（恒过/恒败/单侧过/高方差 flaky）、跨 eval 模式、耗时与 token 模式——产出**观察笔记**（JSON 字符串数组），再用脚本合并进基准：
+
+```bash
+python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <名> --notes <notes文件>
+```
+
+**可选第 5 步：盲测对比（拉起对比子代理）**：需要定性比较两份输出（如 with_skill vs without_skill、新旧版本技能）时，**拉起盲测对比（comparator）子代理**：A/B 标签随机分配且保密来源，令其读入 `agents/comparator.md` 出 `comparison.json`；随后可再拉起 analyzer 模式一复盘「胜者为何胜出」。盲测是定性补充——`compare_skills.py` 的结构评分与 `aggregate_benchmark.py` 的 delta 仍是主决策依据。
+
+> 客户端无子代理派发能力时**降级不跳过**：由主持会话按同一份 `agents/*.md` 内联完成评分/对比/分析，产物格式不变。高方差 eval 视为 flaky 需更多 run。Schema 与布局见 `references/benchmark-schema.md`。
 
 ### 阶段 5.5：与上游候选对比择优
 
@@ -309,6 +324,8 @@ python scripts/compare_skills.py <自建目录> <上游目录> --all-candidates
 - **自建更优或持平** → 采纳自建版本，继续阶段 6。
 - 对比报告保存至 `evolutions/<日期>-compare-<技能名>.md`。
 
+结构分相近（±0.05 内）难以定夺、且双方都能实际产出时，可追加**输出级盲测**：拉起 `agents/comparator.md` 盲测对比子代理比较双方真实输出，再拉起 `agents/analyzer.md` 模式一复盘胜因——语义判断补结构评分之短，结论并入对比报告。
+
 ### 阶段 6：测试与迭代
 
 > **纪律（Iron Law）**：基线必须先于写作——**无技能状态的失败观察在前，写技能在后**（RED→GREEN→REFACTOR）。如果技能已写好才想起基线，回到正文会写前先跑一遍无技能场景。指导措辞的**形式须匹配失败类型**，防借口/微测/正反对照见 `references/skill-writing-guide.md`。
@@ -316,7 +333,7 @@ python scripts/compare_skills.py <自建目录> <上游目录> --all-candidates
 提出 2-3 个**真实用户会说的话**作为测试提示词，请用户确认后运行：
 
 - **有技能** 和 **无技能（基线）** 两组对比运行同一提示词，记录输出、耗时与 token。
-- 针对可客观验证的断言打分（存在性、包含子串、格式正确、命令执行成功）；主观部分交用户定性评审。
+- 断言打分**拉起评分子代理**（读 `agents/grader.md`，产物 `grading.json`）：客观断言逐条判过/不过并引用证据；客户端不支持子代理时由主持会话按同一份指令内联完成。主观部分交用户定性评审；两组输出需定性比较时拉起盲测对比子代理（`agents/comparator.md`，A/B 随机标签保密来源）。
 - 把结果整理成便于用户对照的形式（输出对比 + 量化指标），请用户逐条反馈。
 - 根据反馈改进：从反馈中**归纳共性**而非死板套用；剔除不生效的指令；把各测试中反复手写的辅助脚本沉淀为 `scripts/`。
 - 重复「改进 → 重跑 → 评审」直到用户满意或反馈为空。

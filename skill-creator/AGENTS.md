@@ -60,17 +60,20 @@ python scripts/validate_skills.py [--strict] [--dir <技能目录>]
 
 ### 5. 真实任务测试 + 触发测试
 
-按 `SKILL.md` 阶段 6-7：先用真实场景跑一次技能，再运行触发测试：
+按 `SKILL.md` 阶段 5-7：**确定性脚本打底 + 拉起子代理判断（`agents/`）+ 脚本聚合收尾**：
 
 ```bash
 # 触发测试（两档：启发式默认 / 真实客户端无头 CLI）
 python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录>
 python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
 python scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --improve-mode manual|cli
-python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技能名>
+# 聚合（--notes 合并分析子代理的观察笔记）
+python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技能名> [--notes <notes文件>]
 ```
 
 （evals.json 从 `templates/evals.json.template` 复制；给出触发准确性启发式信号）
+
+语义判断由子代理完成：输出打分拉起 `agents/grader.md`（写 `grading.json`），定性对比拉起 `agents/comparator.md`（A/B 盲测），基准模式分析拉起 `agents/analyzer.md`（产出笔记数组，经 `--notes` 并入 `benchmark.json`）。客户端无子代理派发时由主持会话按同一份指令内联完成，产物格式不变。
 
 ### 6. 安装到客户端
 
@@ -84,7 +87,7 @@ python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技�
 
 ## 资源路径基准
 
-本技能是**自包含完整体**：内部所有引用（`scripts/`、`references/`、`templates/`、`examples/`、`evolutions/`、`indexes/upstream.db`）一律以 **skill-creator 目录自身为根**书写，不依赖任何外部布局。脚本调用：在本技能目录内执行 `python scripts/xxx.py ...`；不在技能目录内执行时加目录前缀 `python "<技能目录>/scripts/xxx.py" ...`（目录定位方法见 SKILL.md「资源路径基准」）。
+本技能是**自包含完整体**：内部所有引用（`scripts/`、`references/`、`templates/`、`examples/`、`evolutions/`、`agents/`、`indexes/upstream.db`）一律以 **skill-creator 目录自身为根**书写，不依赖任何外部布局。脚本调用：在本技能目录内执行 `python scripts/xxx.py ...`；不在技能目录内执行时加目录前缀 `python "<技能目录>/scripts/xxx.py" ...`（目录定位方法见 SKILL.md「资源路径基准」）。
 
 读取规则：references 文档**按需读取**；需要字段/分类时读 `references/skill-template.md`，结构规范读 `references/skill-anatomy.md`，质量标准读 `references/quality-bar.md`，写作规律（TDD 化/表述匹配失败类型/防借口）读 `references/skill-writing-guide.md`，索引细节读 `references/skill-index.md`，对比评分读 `references/skill-comparison.md`。
 
@@ -100,6 +103,9 @@ python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技�
 | `references/skill-index.md` | 需要索引构建/检索/增量同步说明时 |
 | `references/skill-comparison.md` | 进行对比择优时 |
 | `references/benchmark-schema.md` | 做量化基准（run_eval / run_loop / aggregate_benchmark 的 JSON 结构）时 |
+| `agents/grader.md` | 需要给运行产物打断言分时（拉起子代理或内联执行）→ `grading.json` |
+| `agents/comparator.md` | 需要定性盲测比较两份输出时 → `comparison.json` |
+| `agents/analyzer.md` | 复盘盲测胜因（模式一）或分析基准模式产笔记（模式二）时 |
 | `examples/` | 创建前研究结构范本（上游学习样本，验证豁免） |
 | `evolutions/` | 记录"上游更优"对比结论（反馈闭环） |
 | `templates/` | `SKILL.template.md`（骨架）、`evals.json.template`（触发测试模板） |

@@ -40,8 +40,12 @@ skill-creator/
     utils.py                # 共享：SKILL.md frontmatter 解析（四端通用）
     run_eval.py             # 触发评测（heuristic 默认 / cli 双模式）
     run_loop.py             # description 自动优化循环（train/test 60/40）
-    aggregate_benchmark.py  # 量化基准汇总（benchmark.json + benchmark.md，纯 stdlib）
+    aggregate_benchmark.py  # 量化基准汇总（benchmark.json + benchmark.md，纯 stdlib；--notes 合并分析笔记）
     _project_paths.py       # 仓库根定位辅助
+  agents/                   # 子代理指令（SKILL.md 按需拉起，不自动加载）
+    grader.md               # 评分子代理：断言判定 → grading.json
+    comparator.md           # 盲测对比子代理：A/B 定性对比 → comparison.json
+    analyzer.md             # 复盘/基准分析子代理：改进建议 / 观察笔记
   indexes/
     upstream.db             # SQLite 索引（官方 skills_index.json + 结构扫描，随仓库提交）
   references/
