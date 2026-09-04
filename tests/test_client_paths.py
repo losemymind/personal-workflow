@@ -1,5 +1,6 @@
-"""Tests for tools/scripts/client_paths.py (path matrix + install helpers)."""
+﻿"""Tests for tools/scripts/client_paths.py (path matrix + install helpers)."""
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -136,6 +137,80 @@ def test_install_workspace_scope_outside_git_fails(tmp_path):
     )
     assert r.returncode == 1, r.stdout + r.stderr
     assert "git" in (r.stdout + r.stderr)
+
+
+def _demo_skill(tmp_path):
+    src = tmp_path / "src" / "demo-skill"
+    src.mkdir(parents=True)
+    (src / "SKILL.md").write_text(
+        '---\nname: demo-skill\ndescription: "d"\nversion: "1.0.0"\n---\n# demo\n',
+        encoding="utf-8",
+    )
+    return src
+
+
+def _install(tmp_path, script_name, source, dest):
+    script = REPO_ROOT / "tools" / "scripts" / script_name
+    return subprocess.run(
+        [sys.executable, str(script), str(source), "--client", "opencode", "--dest", str(dest)],
+        capture_output=True, text=True,
+    )
+
+
+def test_install_manifest_records_true_source(tmp_path):
+    """Manifest 'source' must record the dir the skill was installed FROM,
+    not the install destination (regression: write_manifest_entry got dst)."""
+    src = _demo_skill(tmp_path)
+    dest = tmp_path / "client" / "skills"
+    r = _install(tmp_path, "install_skill.py", src, dest)
+    assert r.returncode == 0, r.stdout + r.stderr
+    manifest = json.loads(
+        (dest / "demo-skill" / ".personal-workflow-manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["source"] == str(src)
+    assert str(dest) not in manifest["source"]
+
+
+def test_uninstall_no_backup_and_empty_base_removed(tmp_path):
+    """Uninstall creates no backup, and removes the base dir once it becomes empty."""
+    src = _demo_skill(tmp_path)
+    dest = tmp_path / "client" / "skills"
+    assert _install(tmp_path, "install_skill.py", src, dest).returncode == 0
+
+    script = REPO_ROOT / "tools" / "scripts" / "uninstall_skill.py"
+    r = subprocess.run(
+        [sys.executable, str(script), "demo-skill", "--dest", str(dest)],
+        capture_output=True, text=True,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert not (dest / "demo-skill").exists()
+    assert not dest.exists()  # empty base dir reclaimed
+    # message must not promise backups/rollback that don't exist
+    combined = r.stdout + r.stderr
+    assert "are kept" not in combined and "use rollback" not in combined
+
+
+def test_uninstall_agent_removes_empty_base(tmp_path):
+    """Agent uninstall mirrors skill behavior (empty base reclaimed, no backup promise)."""
+    src = tmp_path / "src" / "demo-agent"
+    src.mkdir(parents=True)
+    (src / "AGENT.md").write_text(
+        '---\nname: demo-agent\nversion: "1.0.0"\n---\n# demo agent\n',
+        encoding="utf-8",
+    )
+    dest = tmp_path / "client" / "agent"
+    assert _install(tmp_path, "install_agent.py", src, dest).returncode == 0
+
+    script = REPO_ROOT / "tools" / "scripts" / "uninstall_agent.py"
+    r = subprocess.run(
+        [sys.executable, str(script), "demo-agent", "--dest", str(dest)],
+        capture_output=True, text=True,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert not (dest / "demo-agent").exists()
+    assert not dest.exists()
+    combined = r.stdout + r.stderr
+    assert "are kept" not in combined and "use rollback" not in combined
 
 
 def test_read_version_parses_frontmatter(tmp_path):

@@ -38,7 +38,7 @@ skill-creator/
     run_trigger_tests.py    # 触发测试运行器（启发式准确率/精确率/召回率）
     validate_skills.py      # 自动验证器（frontmatter/章节/安全/链接）
     utils.py                # 共享：SKILL.md frontmatter 解析（四端通用）
-    run_eval.py             # 触发评测（heuristic 默认 / cli 双模式）
+    run_eval.py             # 触发评测（heuristic 默认 / cli 双模式；--output-dir 落盘）
     run_loop.py             # description 自动优化循环（train/test 60/40）
     aggregate_benchmark.py  # 量化基准汇总（benchmark.json + benchmark.md，纯 stdlib；--notes 合并分析笔记）
     _project_paths.py       # 仓库根定位辅助
@@ -51,7 +51,7 @@ skill-creator/
   references/
     skill-template.md       # 技能模板：字段与分类完整参考
     skill-anatomy.md        # 技能解剖：结构与渐进式披露
-    quality-bar.md          # 质量标准与验证标准（6 项质量检查）
+    quality-bar.md          # 质量标准与验证标准（7 项质量检查）
     skill-writing-guide.md  # 写作规律（TDD 化/表述匹配失败类型/防借口/措辞微测）
     skill-index.md          # 上游索引：构建/检索/增量更新说明
     skill-comparison.md     # 对比评分维度与择优流程
@@ -67,8 +67,8 @@ skill-creator/
     react-best-practices/   # 多文件·渐进式披露范本
     loki-mode/              # 综合·复杂工作流范本
   evolutions/               # 对比择优学习记录（反馈闭环）
-   <skill-name>/              # 创建的单个技能实例（按目标客户端文档安装）
-     SKILL.md
+    README.md                 # 记录规范与模板
+    <YYYY-MM-DD>-<主题>.md    # 日期平铺的对比/采纳记录
 ```
 
 ## 使用

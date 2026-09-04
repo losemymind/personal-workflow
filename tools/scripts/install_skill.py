@@ -64,12 +64,16 @@ def save_manifest(path: Path, manifest: dict) -> None:
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def write_manifest_entry(skills_dir: Path, name: str) -> None:
-    """Append/update the manifest entry for one installed skill (manifest lives inside each installed dir)."""
+def write_manifest_entry(skills_dir: Path, name: str, source: Path | None = None) -> None:
+    """Append/update the manifest entry for one installed skill (manifest lives inside each installed dir).
+
+    `source` records where the skill was installed FROM (the true source dir);
+    when omitted it falls back to the install location itself.
+    """
     entry = {
         "name": name,
         "version": read_version(skills_dir),
-        "source": str(skills_dir),
+        "source": str(source if source is not None else skills_dir),
         "installed_at": datetime.now().isoformat(timespec="seconds"),
     }
     manifest_path = skills_dir / MANIFEST_NAME
@@ -93,7 +97,7 @@ def install_one(
             f"{dst} already exists. Use update_skill.py to upgrade, or uninstall first."
         )
     copy_skill_dir(src, dst)
-    write_manifest_entry(dst, src.name)
+    write_manifest_entry(dst, src.name, source=src)
     label = "dest" if dest_override else scope
     print(f"✅ [{client}|{label}] installed {src.name} -> {dst}")
     return dst

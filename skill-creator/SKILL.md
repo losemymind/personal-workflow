@@ -15,28 +15,39 @@ tools: [claude, opencode, codex, deepseek]
 
 ## 概述
 
-本技能指导如何把真实工作流蒸馏为可复用、可验证、跨客户端安装的高质量技能。技能的本质是一组「指令 + 资源」（`SKILL.md` 及其目录），为 LLM 客户端提供精确的触发条件与可预期的操作流程。本技能融合了 5 个成熟 skill-creator 的实践（agentic-awesome-skills 的元数据与质量规范、Anthropic 官方的渐进式披露与迭代测试、Codex 的高信号命名与自由度启发式、agent-skill-creator 的证据驱动与治理）。
+本技能指导如何把真实工作流蒸馏为可复用、可验证、跨客户端安装的高质量技能。技能的本质是一组「指令 + 资源」（`SKILL.md` 及其目录），为 LLM 客户端提供精确的触发条件与可预期的操作流程。本技能融合了 5 个成熟 skill-creator 的实践（agentic-awesome-skills / Anthropic 官方 / MCPMarket / codex-skill-creator / agent-skill-creator）：证据驱动、渐进式披露、自由度匹配脆弱性、高信号命名、迭代测试循环与治理化验证。
 
 本技能目录结构（符合技能解剖标准）：
 
 ```
 skill-creator/
 ├── SKILL.md                    ← 本方法论
+├── AGENTS.md                   ← 独立技能引导（何时使用/工作流/资源导览）
+├── INSTALL.md                  ← 安装运行手册（作用域选择/落点/验证关卡）
+├── README.md                   ← 说明（上游来源/约定/结构）
 ├── scripts/
 │   ├── build_index.py          ← 构建上游技能索引（tarball→SQLite）
 │   ├── search_index.py         ← 检索上游索引（FTS5 全文/分类/风险）
 │   ├── compare_skills.py       ← 自建 vs 上游对比评分（质量6维+结构4维）
+│   ├── create_skill.py         ← 交互式脚手架生成器（含 version 字段）
 │   ├── validate_skills.py      ← 自动验证器（frontmatter/章节/安全/链接）
-│   ├── utils.py                ← 共享：解析 SKILL.md frontmatter（四端通用）
-│   ├── run_eval.py             ← 触发评测（heuristic 默认 / cli 双模式）
+│   ├── run_trigger_tests.py    ← 触发启发式工具（classify/关键词；供 run_eval 复用）
+│   ├── run_eval.py             ← 触发评测（heuristic 默认 / cli 双模式；--output-dir 落盘）
 │   ├── run_loop.py             ← description 自动优化循环（train/test 60/40）
-│   └── aggregate_benchmark.py  ← 量化基准汇总（benchmark.json + benchmark.md）
+│   ├── aggregate_benchmark.py  ← 量化基准汇总（benchmark.json + benchmark.md；--notes 合并分析笔记）
+│   ├── utils.py                ← 共享：解析 SKILL.md frontmatter（四端通用）
+│   └── _project_paths.py       ← 仓库根定位辅助
+├── agents/                     ← 子代理指令（SKILL.md 按需拉起，不自动加载）
+│   ├── grader.md               ← 评分子代理：断言判定 → grading.json
+│   ├── comparator.md           ← 盲测对比子代理：A/B 定性对比 → comparison.json
+│   └── analyzer.md             ← 复盘/基准分析子代理：改进建议 / 观察笔记
 ├── indexes/
 │   └── upstream.db             ← SQLite 索引（官方 skills_index.json + 结构扫描）
 ├── references/
 │   ├── skill-template.md       ← 字段与分类完整参考
 │   ├── skill-anatomy.md        ← 结构解剖与渐进式披露
-│   ├── quality-bar.md          ← 6 项质量检查与验证标准
+│   ├── quality-bar.md          ← 7 项质量检查与验证标准
+│   ├── skill-writing-guide.md  ← 写作规律（TDD 化/表述匹配失败类型/防借口/措辞微测）
 │   ├── skill-index.md          ← 索引构建/检索/更新说明
 │   ├── skill-comparison.md     ← 对比评分维度与择优流程
 │   └── benchmark-schema.md     ← 评测/基准 JSON schema（移植自 Anthropic 官方）
@@ -47,9 +58,10 @@ skill-creator/
 │   ├── systematic-debugging/   ← 单文件+references·阶段强制序
 │   ├── react-best-practices/   ← 多文件·渐进式披露范本（AGENTS.md+rules/）
 │   └── loki-mode/              ← 综合·复杂工作流范本（references/ 大拆分）
-├── evolutions/                 ← 对比学习记录（反馈闭环）
+├── evolutions/                 ← 对比学习记录（反馈闭环；README + 日期平铺记录）
 └── templates/
-    └── SKILL.template.md       ← 新技能骨架
+    ├── SKILL.template.md       ← 新技能骨架
+    └── evals.json.template     ← 触发测试用例模板
 ```
 
 ## 何时使用此技能
@@ -199,7 +211,7 @@ tools: [claude, opencode, codex]   # 可选：支持的客户端
 
 ### 阶段 0：检索上游技能库（先查后建）
 
-动手创建前，**先在本地索引中检索上游 agentic-awesome-skills 是否已有可用技能**（避免重复造轮子，是本技能的第一个决策门）：
+动手创建前，**先在本地索引中检索上游技能库是否已有可用技能**（索引为双源：`aas` = agentic-awesome-skills、`addy` = agent-skills，默认全库检索，`--source` 过滤单源；避免重复造轮子，是本技能的第一个决策门）：
 
 ```bash
 python scripts/search_index.py "<用户需求关键词>" [--category <分类>] [--risk <级别>] [--limit 10]
@@ -281,7 +293,9 @@ python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技
 python scripts/run_eval.py --eval-set <技能目录>/evals.json --skill-dir <技能目录> --mode cli --client claude
 ```
 
-输出每条查询的触发判定 + 汇总（passed/total、precision、recall）；`--json` 可机器读取。
+输出每条查询的触发判定 + 汇总（passed/total、precision、recall）；`--json` 可机器读取；`--output-dir <目录>` 把结果 JSON 落盘为 `eval-results-<技能名>.json`（供后续评分/复盘引用）。
+
+> **职责边界**：`run_eval.py` 只产出触发判定信号（stdout / 落盘文件），不铺设目录结构——评分所需的工作区布局（`<workspace>/iteration-N/eval-<名>/<配置>/run-N/`）由编排层（主持会话或拉起方）按下节工作区布局搭建。
 
 **第 2 步：输出打分（拉起评分子代理）**：对每个 eval 跑完「有技能」与「无技能（基线）」两组运行、产物按「工作区布局」落到 `<workspace>/iteration-N/eval-<名>/<with_skill|without_skill>/run-N/` 后，**拉起评分（grader）子代理**：提示词中给出 `expectations` / `transcript_path` / `outputs_dir`，令其读入 `agents/grader.md` 执行——逐条断言判定、核验隐含声明、审视断言质量，把 `grading.json` 写进每个 run 目录（字段契约见 `references/benchmark-schema.md`）。
 
@@ -374,7 +388,7 @@ python scripts/run_loop.py --eval-set <技能目录>/evals.json --skill-dir <技
 
 - 按「多客户端安装指引」把技能复制到目标客户端的 skills 目录。
 - 重启客户端后用真实小任务触发一次，确认技能被加载、按指令执行。
-- 经验证、可复用的技能按质量检查清单归档到仓库 `skills/<分类>/<name>/`（规则 4：分类目录必入，无「留顶层」例外）。
+- 经验证、可复用的技能按质量检查清单归档到宿主技能库的分类目录 `skills/<分类>/<name>/`——按功能分类入库，分类目录不存在则先创建，不得散置在库根目录。
 
 ## 质量检查清单
 

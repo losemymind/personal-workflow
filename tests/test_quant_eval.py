@@ -107,6 +107,27 @@ def test_run_eval_heuristic_reports_summary(tmp_path):
     assert out["summary"]["passed"] == 2
 
 
+def test_run_eval_output_dir_writes_results(tmp_path):
+    from conftest import run_script
+
+    skill = _skill_with_evals(tmp_path, [
+        {"id": 1, "query": "帮我总结今天的改动写 PR", "should_trigger": True},
+        {"id": 2, "query": "这个函数有什么 bug？", "should_trigger": False},
+    ])
+    out_dir = tmp_path / "eval-out"
+    r = run_script(
+        "skill-creator/scripts/run_eval.py",
+        "--eval-set", str(skill / "evals" / "evals.json"),
+        "--skill-dir", str(skill),
+        "--output-dir", str(out_dir),
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+    payload = json.loads((out_dir / "eval-results-pr-summarizer.json").read_text(encoding="utf-8"))
+    assert payload["summary"]["total"] == 2
+    assert payload["mode"] == "heuristic"
+    assert payload["skill_name"] == "pr-summarizer"
+
+
 def test_run_loop_manual_selects_best_by_test(tmp_path, monkeypatch):
     from conftest import run_script
 

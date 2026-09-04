@@ -14,7 +14,7 @@ Reads an eval set (evals.json: query + should_trigger), runs each query, and
 reports per-query trigger rate plus summary (passed/total, precision, recall).
 
 Usage:
-    python scripts/run_eval.py --eval-set <evals.json> --skill-dir <skill> [--mode heuristic|cli] [--client claude] [--runs-per-query 1] [--threshold 0.5] [--json]
+    python scripts/run_eval.py --eval-set <evals.json> --skill-dir <skill> [--mode heuristic|cli] [--client claude] [--runs-per-query 1] [--threshold 0.5] [--json] [--output-dir <dir>]
 
 Exit code 0 = evaluation produced; 1 if error.
 """
@@ -107,6 +107,8 @@ def main() -> int:
     parser.add_argument("--runs-per-query", type=int, default=1, help="Runs per query (cli mode)")
     parser.add_argument("--threshold", type=float, default=0.5, help="Trigger rate threshold (cli mode)")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
+    parser.add_argument("--output-dir", default=None,
+                        help="Write results JSON (eval-results-<skill>.json) into this directory")
     args = parser.parse_args()
 
     eval_set_path = Path(args.eval_set)
@@ -147,6 +149,12 @@ def main() -> int:
         "results": results,
         "summary": summarize(results),
     }
+    if args.output_dir:
+        out_dir = Path(args.output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"eval-results-{name}.json"
+        out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Results written to: {out_path}", file=sys.stderr)
     if args.json:
         print(json.dumps(output, ensure_ascii=False, indent=2))
     else:

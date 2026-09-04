@@ -63,7 +63,9 @@ python tools/scripts/uninstall_skill.py <技能名>
 ```
 
 行为：仅删除**带 manifest 标记**的安装（保护用户自己装的技能不受误删）；
-备份保留在 `~/.personal-workflow/backups/`，可回滚恢复。
+卸载后自动回收因此变空的父目录。**卸载不创建备份**——需要时用
+`install_skill.py` 重新安装即可（备份仅在 update 升级旧版时产生，
+rollback 只能恢复那些被 update 备份过的版本）。
 
 ## 回滚（rollback）
 

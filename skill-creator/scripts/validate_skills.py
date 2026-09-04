@@ -1,4 +1,4 @@
-"""Validate skills in the PersonalWorkflow repository.
+"""Validate skill directories (SKILL.md frontmatter/sections/security/links).
 
 Part of the skill-creator skill (see SKILL.md).
 Adapted from agentic-awesome-skills' tools/scripts/validate_skills.py.
@@ -378,7 +378,7 @@ def validate_skills(skills_dir: str, strict_mode: bool = False) -> bool:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Validate PersonalWorkflow skills")
+    parser = argparse.ArgumentParser(description="Validate skill directories (SKILL.md frontmatter/sections/security/links)")
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (for CI)")
     parser.add_argument("--dir", default=None, help="Skills directory to validate (default: auto-detected skills/ under the repo root)")
     args = parser.parse_args()

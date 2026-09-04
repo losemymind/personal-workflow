@@ -77,7 +77,7 @@ python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技�
 
 ### 6. 安装到客户端
 
-将技能目录放置到目标客户端的安装目录；按客户端文档说明完成注册。
+将技能目录放置到目标客户端的安装目录；按客户端文档说明完成注册。本技能自身的安装（作用域选择 + 3 端落点 + 验证关卡）按 `INSTALL.md` 执行。
 
 安装后重启客户端生效；后续更新/卸载/回滚由客户端工具或独立管理脚本处理。
 
@@ -96,6 +96,7 @@ python scripts/aggregate_benchmark.py <workspace>/iteration-N --skill-name <技�
 | 资源 | 何时读取 |
 |---|---|
 | `SKILL.md` | 任务开始时：完整方法论（10 阶段工作流） |
+| `INSTALL.md` | 安装本技能自身时（作用域选择 + 3 端落点 + 验证关卡 + 生命周期） |
 | `references/skill-template.md` | 需要字段/分类/风险级别细节时 |
 | `references/skill-anatomy.md` | 需要结构规范/渐进式披露时 |
 | `references/quality-bar.md` | 需要质量标准/验证器检查项时 |

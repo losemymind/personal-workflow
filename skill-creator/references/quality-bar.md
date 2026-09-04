@@ -1,8 +1,8 @@
 # 质量标准与验证标准（Quality Bar）
 
-基于 agentic-awesome-skills 的 `quality-bar.md` 适配。技能必须达到以下 **6 项质量检查** 才能视为合格。其中部分由 `scripts/validate_skills.py` 自动执行（标注「自动」），其余需要人工评审。
+基于 agentic-awesome-skills 的 `quality-bar.md` 适配。技能必须达到以下 **7 项质量检查** 才能视为合格。其中部分由 `scripts/validate_skills.py` 自动执行（标注「自动」），其余需要人工评审。
 
-## 6 项质量检查
+## 7 项质量检查
 
 ### 1. 元数据完整性（自动）
 
@@ -14,13 +14,6 @@
 - `source`：来源归属（原创用 `self`）
 - `version`：`x.y.z` 语义化格式（推荐，生命周期记账；缺失仅提示）
 - `category` / `date_added`：推荐（验证器给出提示）
-
-### 7. 写作规律（人工；见 `references/skill-writing-guide.md`）
-
-- **先失败后写（Iron Law）**：无技能状态的基线失败观察在写作之前
-- **表述形式匹配失败类型**：禁止 vs 正面配方 vs REQUIRED 槽 vs 条件谓词，选错适得其反
-- **纪律型技能防合理化**：借口表 / 红旗清单 / 封漏洞 / 字即神
-- **跨技能引用不用 `@` 语法**（force-load 烧上下文），用显式 REQUIRED 标记
 
 ### 2. 清晰的触发条件（自动）
 
@@ -57,6 +50,13 @@
 - 不得有内联令牌/密钥风格的命令示例
 - 高风险但必要的命令使用 `<!-- security-allowlist: ... -->` 显式允许并附警告
 - offensive 技能必须含「AUTHORIZED USE ONLY / 仅限授权使用」免责声明与强制用户确认门
+
+### 7. 写作规律（人工；见 `references/skill-writing-guide.md`）
+
+- **先失败后写（Iron Law）**：无技能状态的基线失败观察在写作之前
+- **表述形式匹配失败类型**：禁止 vs 正面配方 vs REQUIRED 槽 vs 条件谓词，选错适得其反
+- **纪律型技能防合理化**：借口表 / 红旗清单 / 封漏洞 / 字即神
+- **跨技能引用不用 `@` 语法**（force-load 烧上下文），用显式 REQUIRED 标记
 
 ## 验证器使用
 

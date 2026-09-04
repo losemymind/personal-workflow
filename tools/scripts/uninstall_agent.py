@@ -60,7 +60,6 @@ def main() -> int:
     parser.add_argument("name", help="Installed agent name")
     parser.add_argument("--client", default=None, help="Only uninstall for this client (default: all detected)")
     parser.add_argument("--dest", default=None, help="Override install dir (must match install --dest if used)")
-    parser.add_argument("--keep-backup", action="store_true", help="Keep the backup copy (default: keep)")
     args = parser.parse_args()
 
     if args.client:
@@ -73,18 +72,24 @@ def main() -> int:
         print(f"❌ No manifest-marked install of '{args.name}' found (nothing to uninstall).")
         return 1
 
+    bases = set()
     for client, dst in targets:
         if dst.is_dir():
             shutil.rmtree(dst, ignore_errors=True)
-            manifest_path = dst / MANIFEST_NAME
         else:
             dst.unlink(missing_ok=True)
             # remove the sidecar manifest if present
             sidecar = dst.parent / (dst.stem + ".manifest.json")
             sidecar.unlink(missing_ok=True)
-            manifest_path = sidecar
+        bases.add(dst.parent)
         print(f"🗑️  [{client}] uninstalled: {dst}")
-    print("ℹ️  Backup copies under ~/.personal-workflow/backups are kept (use rollback_agent.py to restore).")
+    for base in sorted(bases):
+        try:
+            base.rmdir()
+            print(f"🧹 [{base}] removed empty dir left by uninstall")
+        except OSError:
+            pass
+    print("ℹ️ 卸载不创建备份——需要时用 install_agent.py 重新安装（备份仅来自 update 升级，rollback 只能恢复那些版本）。")
     return 0
 
 
